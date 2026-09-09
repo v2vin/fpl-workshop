@@ -1,9 +1,32 @@
 rules_version = '2';
 
-// Placeholder until Step 3 writes the real rules (see CLAUDE.md, "Firestore security rules").
-// Everything is denied so nothing is exposed by accident if these are ever deployed early.
+// Implements CLAUDE.md, "Firestore security rules (intent)". Steps 2 and 3 fill this in;
+// anything not matched below is denied.
 service cloud.firestore {
   match /databases/{database}/documents {
+    // TODO(owner, Step 2): replace with Vitumbiko's Firebase Auth uid. Must match src/lib/config.ts.
+    function ownerUid() { return 'OWNER_UID_TODO'; }
+    function signedIn() { return request.auth != null; }
+    function isOwner() { return signedIn() && request.auth.uid == ownerUid(); }
+
+    // managers/{uid}: read by any signed-in user; write only by that uid;
+    // fplEntryId may be set once and not changed afterwards.
+    match /managers/{uid} {
+      function managerKeys() {
+        return request.resource.data.keys().hasOnly(['displayName', 'fplEntryId', 'photoURL', 'joinedAt']);
+      }
+      function entryIdUnchangedOrFirstSet() {
+        return !('fplEntryId' in resource.data)
+          || resource.data.fplEntryId == null
+          || request.resource.data.fplEntryId == resource.data.fplEntryId;
+      }
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.uid == uid && managerKeys();
+      allow update: if signedIn() && request.auth.uid == uid && managerKeys() && entryIdUnchangedOrFirstSet();
+      allow delete: if false;
+    }
+
+    // gifts, codes, standings, months, gameweeks: Step 3.
     match /{document=**} {
       allow read, write: if false;
     }

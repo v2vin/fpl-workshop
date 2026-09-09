@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router'
 import Layout from './components/Layout'
+import RequireOwner from './components/RequireOwner'
 import About from './pages/About'
 import Admin from './pages/Admin'
 import Cabinet from './pages/Cabinet'
@@ -16,7 +17,14 @@ export default function App() {
         <Route path="draw" element={<Draw />} />
         <Route path="gifts" element={<Gifts />} />
         <Route path="cabinet" element={<Cabinet />} />
-        <Route path="admin" element={<Admin />} />
+        <Route
+          path="admin"
+          element={
+            <RequireOwner>
+              <Admin />
+            </RequireOwner>
+          }
+        />
         <Route path="about" element={<About />} />
         <Route path="*" element={<NotFound />} />
       </Route>
