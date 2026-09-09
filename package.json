@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "deploy": "npm run build && node scripts/firebase.mjs deploy --only hosting,firestore:rules"
+    "deploy": "npm run build && node scripts/firebase.mjs deploy --only hosting,firestore:rules",
+    "test": "node scripts/firebase.mjs emulators:exec --only firestore \"vitest run\"",
+    "test:watch": "node scripts/firebase.mjs emulators:exec --only firestore \"vitest\"",
+    "deploy:rules": "node scripts/firebase.mjs deploy --only firestore:rules"
   },
   "dependencies": {
     "firebase": "^12.18.0",
@@ -21,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
@@ -38,6 +42,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.70.0",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
   }
 }

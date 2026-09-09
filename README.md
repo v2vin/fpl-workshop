@@ -7,7 +7,8 @@ gift from VMS Woodwork (Malawi) is revealed.
 Built with React, Vite, TypeScript and Tailwind on Firebase's free Spark plan. Standings are
 synced from the FPL API by a GitHub Actions cron job; the browser only ever reads Firestore.
 
-See [CLAUDE.md](CLAUDE.md) for the full brief, data model, security rules and build order.
+The project brief (data model, security rules, build order) is kept in a local `CLAUDE.md` that is
+deliberately not committed.
 
 ## Develop
 

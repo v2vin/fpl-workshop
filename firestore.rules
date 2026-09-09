@@ -1,10 +1,11 @@
 rules_version = '2';
 
-// Implements CLAUDE.md, "Firestore security rules (intent)". Steps 2 and 3 fill this in;
-// anything not matched below is denied.
+// Implements CLAUDE.md, "Firestore security rules (intent)". Anything not matched is denied.
+// The GitHub Action writes standings/months/gameweeks with the admin SDK, which bypasses rules.
 service cloud.firestore {
   match /databases/{database}/documents {
-    // TODO(owner, Step 2): replace with Vitumbiko's Firebase Auth uid. Must match src/lib/config.ts.
+    // TODO(owner): replace with Vitumbiko's Firebase Auth uid. Must match OWNER_UID in
+    // src/lib/config.ts. test/rules.test.ts reads this value, so the tests follow the change.
     function ownerUid() { return 'OWNER_UID_TODO'; }
     function signedIn() { return request.auth != null; }
     function isOwner() { return signedIn() && request.auth.uid == ownerUid(); }
@@ -26,9 +27,44 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // gifts, codes, standings, months, gameweeks: Step 3.
-    match /{document=**} {
-      allow read, write: if false;
+    // gifts/*: read by anyone (including signed out); write only by the owner.
+    match /gifts/{giftId} {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
+    // codes/{code}: get only by the winner (and the owner, who issued it); list denied to everyone
+    // except the owner; create only by the owner; update only by the winner and only to flip
+    // redeemed false -> true together with redeemedAt; delete only by the owner.
+    match /codes/{code} {
+      function isWinner() { return signedIn() && request.auth.uid == resource.data.winnerUid; }
+      function redeemOnly() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['redeemed', 'redeemedAt'])
+          && resource.data.redeemed == false
+          && request.resource.data.redeemed == true
+          && request.resource.data.redeemedAt is string;
+      }
+      allow get: if isOwner() || isWinner();
+      allow list: if isOwner();
+      allow create: if isOwner()
+        && request.resource.data.keys().hasOnly(['month', 'winnerUid', 'giftId', 'issuedAt', 'redeemed', 'redeemedAt'])
+        && request.resource.data.redeemed == false;
+      allow update: if isWinner() && redeemOnly();
+      allow delete: if isOwner();
+    }
+
+    // standings/*, months/*, gameweeks/*: read by anyone; no client writes.
+    match /standings/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /months/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /gameweeks/{doc} {
+      allow read: if true;
+      allow write: if false;
     }
   }
 }
