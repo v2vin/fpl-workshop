@@ -1,7 +1,7 @@
 // Non-secret configuration. See CLAUDE.md, "Configuration the owner must supply".
 
 /** Firebase Auth uid of the owner (Vitumbiko). Must match ownerUid() in firestore.rules. */
-export const OWNER_UID = 'ixlVRwiaMsRS2DTweHSzXOMcgh52'
+export const OWNER_UID: string = 'ixlVRwiaMsRS2DTweHSzXOMcgh52'
 
 /** FPL classic mini-league id, from the league URL on fantasy.premierleague.com. */
 export const FPL_LEAGUE_ID = 1955077
