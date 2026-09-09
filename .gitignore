@@ -1,0 +1,24 @@
+# secrets — never commit
+.env
+.env.*
+*-firebase-adminsdk-*.json
+service-account*.json
+
+# firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+emulator-data/
+
+# build
+dist/
+node_modules/
+
+# editor / os
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.local
