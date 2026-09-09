@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Tea-light holder, photo to follow">
+  <rect width="800" height="600" fill="#e3c18b"/>
+  <g fill="none" stroke="#cfa66a" stroke-width="3" opacity=".7">
+    <path d="M0 90 C 200 70, 400 110, 800 85"/>
+    <path d="M0 210 C 250 240, 450 190, 800 225"/>
+    <path d="M0 400 C 180 380, 420 420, 800 395"/>
+    <path d="M0 520 C 300 545, 500 500, 800 530"/>
+  </g>
+  <rect x="24" y="24" width="752" height="552" fill="none" stroke="#a97c45" stroke-width="4" rx="8"/>
+  <text x="400" y="312" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="56" font-weight="700" fill="#4a3419">Tea-light holder</text>
+  <text x="400" y="396" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="24" fill="#6b4f2e">Photo to follow &#183; VMS Woodwork</text>
+</svg>

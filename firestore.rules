@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// Placeholder until Step 3 writes the real rules (see CLAUDE.md, "Firestore security rules").
+// Everything is denied so nothing is exposed by accident if these are ever deployed early.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

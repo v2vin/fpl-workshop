@@ -1,0 +1,5 @@
+dist
+node_modules
+emulator-data
+package-lock.json
+public/gifts/**/*.svg

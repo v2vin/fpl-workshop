@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+/* Two palettes: pine (the gifts) and pitch (the football). */
+@theme {
+  --color-pine-50: #fbf7ee;
+  --color-pine-100: #f3e7cf;
+  --color-pine-200: #e8d3a8;
+  --color-pine-300: #dbbb7e;
+  --color-pine-400: #c99f5c;
+  --color-pine-500: #b5843f;
+  --color-pine-600: #946733;
+  --color-pine-700: #744f2a;
+  --color-pine-800: #533921;
+  --color-pine-900: #362515;
+
+  --color-pitch-50: #eef7f1;
+  --color-pitch-100: #d5ebdc;
+  --color-pitch-200: #aed7bc;
+  --color-pitch-300: #7dbd95;
+  --color-pitch-400: #4f9e70;
+  --color-pitch-500: #2f7d4f;
+  --color-pitch-600: #256640;
+  --color-pitch-700: #1b4d31;
+  --color-pitch-800: #143a25;
+  --color-pitch-900: #0e2a1b;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  @apply bg-pine-50 text-stone-900 antialiased;
+}
