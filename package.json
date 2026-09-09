@@ -4,14 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n vite,firebase -c cyan,yellow \"vite\" \"firebase emulators:start --only auth,firestore --import=emulator-data --export-on-exit\"",
-    "emulators": "firebase emulators:start --only auth,firestore --import=emulator-data --export-on-exit",
+    "dev": "concurrently -n vite,firebase -c cyan,yellow \"vite\" \"node scripts/firebase.mjs emulators:start --only auth,firestore --import=emulator-data --export-on-exit\"",
+    "emulators": "node scripts/firebase.mjs emulators:start --only auth,firestore --import=emulator-data --export-on-exit",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "deploy": "npm run build && firebase deploy --only hosting,firestore:rules"
+    "deploy": "npm run build && node scripts/firebase.mjs deploy --only hosting,firestore:rules"
   },
   "dependencies": {
     "firebase": "^12.18.0",

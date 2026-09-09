@@ -19,4 +19,6 @@ npm run build
 npm run deploy     # firebase deploy --only hosting,firestore:rules
 ```
 
-The Firestore and Auth emulators need Java 11 or newer on your PATH.
+The Firestore and Auth emulators need Java 11 or newer on your PATH. All Firebase CLI calls go
+through `scripts/firebase.mjs`, which on Windows points the JDK at `C:/Users/Public` for its
+Unix-domain wake-up sockets; without that the Firestore emulator exits on start on some machines.
