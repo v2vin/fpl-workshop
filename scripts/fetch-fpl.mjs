@@ -157,6 +157,8 @@ const standings = {
   gameweek,
   nextGameweek: next?.id ?? null,
   nextDeadline: next?.deadline ?? null,
+  // The month whose document the Table page should show: that of the latest started gameweek.
+  currentMonth: started.length ? monthOf(events.find((e) => e.id === gameweek).deadline) : null,
   leagueName,
   rows,
 }

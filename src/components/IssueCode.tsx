@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Gift } from '../data/gifts'
 import { DrawError, issueCode, winnerMessage, type Code } from '../lib/draw'
 import { formatMonth } from '../lib/format'
+import { useMonth } from '../lib/useFpl'
 import { useManagers } from '../lib/useManagers'
 import ShareButton from './ShareButton'
 
@@ -23,6 +24,10 @@ export default function IssueCode({ gifts }: { gifts: Gift[] }) {
 
   const available = gifts.filter((g) => g.status === 'available').length
   const winner = managers?.find((m) => m.uid === winnerUid)
+  // Close-month view: who the sync says leads the chosen month, and whether it is finished.
+  const summary = useMonth(/^[0-9]{4}-[0-9]{2}$/.test(month) ? month : null)
+  const leader = summary?.rows[0]
+  const leaderManager = leader ? managers?.find((m) => m.fplEntryId === leader.entryId) : undefined
   const issuedGift = issued ? gifts.find((g) => g.id === issued.code.giftId) : undefined
 
   async function onIssue() {
@@ -62,6 +67,40 @@ export default function IssueCode({ gifts }: { gifts: Gift[] }) {
             className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
           />
         </label>
+        {summary === null && (
+          <p className="text-sm text-stone-500">No gameweek in that month has been played yet.</p>
+        )}
+        {summary && leader && (
+          <div className="bg-pine-50 rounded-lg p-3 text-sm">
+            <p>
+              <span
+                className={
+                  summary.closed ? 'text-pitch-800 font-semibold' : 'font-semibold text-amber-700'
+                }
+              >
+                {summary.closed ? 'Month closed.' : 'Month still open.'}
+              </span>{' '}
+              Leader: <strong>{leader.playerName}</strong> on {leader.points} points
+              {summary.rows[1]
+                ? ` (next: ${summary.rows[1].playerName}, ${summary.rows[1].points})`
+                : ''}
+              .
+            </p>
+            {leaderManager ? (
+              <button
+                type="button"
+                onClick={() => setWinnerUid(leaderManager.uid)}
+                className="text-pitch-700 mt-2 text-sm font-medium underline"
+              >
+                Pick {leaderManager.displayName} as the winner
+              </button>
+            ) : (
+              <p className="mt-1 text-xs text-stone-500">
+                Nobody signed in has linked team {leader.entryId} yet, so pick the winner by hand.
+              </p>
+            )}
+          </div>
+        )}
         <label className="text-sm">
           <span className="block text-stone-600">Winner</span>
           <select

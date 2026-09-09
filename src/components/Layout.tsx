@@ -26,7 +26,9 @@ export default function Layout() {
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <NavLink to="/" className="flex items-center gap-2">
             <span className="bg-pine-300 inline-block h-3 w-8 rounded-sm" aria-hidden="true" />
-            <span className="text-lg font-bold tracking-tight">{LEAGUE_NAME}</span>
+            <span className="text-lg font-bold tracking-tight whitespace-nowrap">
+              {LEAGUE_NAME}
+            </span>
           </NavLink>
           {loading ? null : user ? (
             <div className="flex items-center gap-2">

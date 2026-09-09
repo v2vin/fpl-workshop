@@ -21,9 +21,22 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => void signOut()}
-        className="text-pine-200 hover:bg-pitch-700 rounded-full px-2 py-1 text-xs"
+        aria-label="Sign out"
+        title="Sign out"
+        className="text-pine-200 hover:bg-pitch-700 grid h-7 w-7 place-items-center rounded-full"
       >
-        Sign out
+        <svg
+          viewBox="0 0 24 24"
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l5 4-5 4M20 12H9" />
+        </svg>
       </button>
     </div>
   )
