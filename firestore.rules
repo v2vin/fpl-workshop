@@ -4,9 +4,9 @@ rules_version = '2';
 // The GitHub Action writes standings/months/gameweeks with the admin SDK, which bypasses rules.
 service cloud.firestore {
   match /databases/{database}/documents {
-    // TODO(owner): replace with Vitumbiko's Firebase Auth uid. Must match OWNER_UID in
+    // Vitumbiko's Firebase Auth uid. Must match OWNER_UID in
     // src/lib/config.ts. test/rules.test.ts reads this value, so the tests follow the change.
-    function ownerUid() { return 'OWNER_UID_TODO'; }
+    function ownerUid() { return 'ixlVRwiaMsRS2DTweHSzXOMcgh52'; }
     function signedIn() { return request.auth != null; }
     function isOwner() { return signedIn() && request.auth.uid == ownerUid(); }
 
