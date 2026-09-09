@@ -3,7 +3,7 @@ import { connectAuthEmulator, getAuth } from 'firebase/auth'
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore'
 
 // Firebase web config. This is not a secret: Firestore rules protect the data (CLAUDE.md,
-// "Repository and secrets"). Placeholders work against the emulators in dev.
+// "Repository and secrets").
 //
 // Web app "FPL Workshop" registered 2026-09-09 via `firebase apps:create`. Deliberately without
 // storageBucket (no Storage) and measurementId (no Analytics) — see CLAUDE.md constraints.
