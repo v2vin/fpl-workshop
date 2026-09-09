@@ -4,6 +4,7 @@ import { LEAGUE_NAME } from '../lib/config'
 import { useManager } from '../lib/useManager'
 import EntryIdPrompt from './EntryIdPrompt'
 import Icon, { type IconName } from './Icon'
+import InstallHint from './InstallHint'
 import SignInButton from './SignInButton'
 import UserMenu from './UserMenu'
 
@@ -54,6 +55,7 @@ export default function Layout() {
       </header>
 
       <main className="mx-auto w-full max-w-md flex-1 px-4 pt-5 pb-28">
+        <InstallHint />
         {needsEntryId && user && <EntryIdPrompt uid={user.uid} />}
         <Outlet />
       </main>
