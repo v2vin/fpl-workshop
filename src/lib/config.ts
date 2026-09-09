@@ -11,3 +11,6 @@ export const SEASON = '2026-27'
 export const LEAGUE_NAME = 'FPL Workshop'
 
 export const WORKSHOP_NAME = 'VMS Woodwork'
+
+/** Hosting URL shared with the league. Also the authDomain; see src/lib/firebase.ts. */
+export const SITE_URL = 'https://fpl-workshop.web.app'

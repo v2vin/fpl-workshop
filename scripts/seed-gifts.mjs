@@ -2,7 +2,7 @@
 // One-off seed of gifts/{giftId} from src/data/gifts.ts (CLAUDE.md, Step 4).
 //
 // Idempotent: creates missing gifts and refreshes the static fields (name, blurb, hours,
-// materials, boughtParts) of existing ones. Never touches status, wonBy, wonMonth or photos,
+// materials, boughtParts) of existing ones. Never touches status, wonBy, wonByName, wonMonth or photos,
 // so it is safe to re-run after the season has started.
 //
 //   node scripts/seed-gifts.mjs --emulator      # against the local emulator (npm run dev running)

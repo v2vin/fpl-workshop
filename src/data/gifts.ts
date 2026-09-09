@@ -16,6 +16,8 @@ export interface Gift {
   status: GiftStatus
   /** Firebase Auth uid of the winner, once drawn. */
   wonBy: string | null
+  /** Winner's display name at issue time, so the wall of winners works signed out. */
+  wonByName: string | null
   /** "YYYY-MM" of the month the gift was won, once drawn. */
   wonMonth: string | null
   /** Paths under /gifts/{giftId}/; the first is the hero image. */
@@ -183,6 +185,7 @@ export const gifts: Gift[] = seeds.map((s) => ({
   boughtParts: s.boughtParts ?? null,
   status: 'available',
   wonBy: null,
+  wonByName: null,
   wonMonth: null,
   photos: [`/gifts/${s.id}/hero.svg`],
 }))

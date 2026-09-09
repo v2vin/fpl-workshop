@@ -1,5 +1,6 @@
 import type { User } from 'firebase/auth'
 import {
+  collection,
   doc,
   getDoc,
   onSnapshot,
@@ -61,4 +62,21 @@ export function setFplEntryId(uid: string, fplEntryId: number): Promise<void> {
 /** Live view of one manager document; `null` while the document does not exist. */
 export function watchManager(uid: string, onChange: (m: Manager | null) => void): Unsubscribe {
   return onSnapshot(managerRef(uid), (snap) => onChange(snap.exists() ? snap.data() : null))
+}
+
+export interface ManagerWithUid extends Manager {
+  uid: string
+}
+
+/** Live list of all managers, sorted by name. Rule: `managers/*` read by any signed-in user. */
+export function watchManagers(onChange: (managers: ManagerWithUid[]) => void): Unsubscribe {
+  return onSnapshot(
+    collection(db, 'managers').withConverter(converter),
+    (snap) => {
+      const list = snap.docs.map((d) => ({ uid: d.id, ...d.data() }))
+      list.sort((a, b) => a.displayName.localeCompare(b.displayName))
+      onChange(list)
+    },
+    (err) => console.error('managers snapshot failed', err),
+  )
 }

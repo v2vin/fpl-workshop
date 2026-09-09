@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import CodesList from '../components/CodesList'
+import IssueCode from '../components/IssueCode'
 import Notice from '../components/Notice'
 import Page from '../components/Page'
 import StatusBadge from '../components/StatusBadge'
@@ -124,13 +126,19 @@ function GiftRow({ gift, disabled }: { gift: Gift; disabled: boolean }) {
 export default function Admin() {
   const { gifts, live, loading } = useGifts()
   return (
-    <Page title="Admin" intro="Update each build as it happens. Photos go in the repo first.">
+    <Page title="Admin" intro="Issue the month’s code, then keep each build up to date.">
       {!loading && !live && (
         <Notice>
           The gifts collection is empty, so nothing can be changed yet. Run{' '}
           <code className="bg-pine-100 rounded px-1">npm run seed:gifts</code> once.
         </Notice>
       )}
+      {live && <IssueCode gifts={gifts} />}
+      {live && <CodesList gifts={gifts} />}
+      <h2 className="text-pitch-900 pt-2 text-lg font-bold">Builds</h2>
+      <p className="-mt-3 text-sm text-stone-600">
+        Photos go into the repo first; add the file name here.
+      </p>
       <ul className="space-y-3">
         {gifts.map((g) => (
           <GiftRow key={g.id} gift={g} disabled={!live} />

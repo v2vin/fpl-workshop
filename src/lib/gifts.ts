@@ -34,6 +34,7 @@ const converter: FirestoreDataConverter<Gift> = {
       boughtParts: typeof d.boughtParts === 'string' ? d.boughtParts : null,
       status: isStatus(d.status) ? d.status : 'available',
       wonBy: typeof d.wonBy === 'string' ? d.wonBy : null,
+      wonByName: typeof d.wonByName === 'string' ? d.wonByName : null,
       wonMonth: typeof d.wonMonth === 'string' ? d.wonMonth : null,
       photos: Array.isArray(d.photos)
         ? d.photos.filter((p): p is string => typeof p === 'string')
