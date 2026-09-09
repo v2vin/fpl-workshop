@@ -1,0 +1,55 @@
+# Pulls the mini league from the FPL API into Firestore (CLAUDE.md, Step 6).
+# Free on a public repo. Needs the repository secret FIREBASE_SERVICE_ACCOUNT (service-account JSON)
+# and the repository variable FPL_LEAGUE_ID.
+name: FPL sync
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # every six hours, UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fpl-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install (runtime dependencies only)
+        run: npm ci --omit=dev
+
+      - name: Check configuration
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FPL_LEAGUE_ID: ${{ vars.FPL_LEAGUE_ID }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Repository secret FIREBASE_SERVICE_ACCOUNT is missing"; exit 1
+          fi
+          if [ -z "$FPL_LEAGUE_ID" ]; then
+            echo "::error::Repository variable FPL_LEAGUE_ID is missing"; exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/service-account.json"
+          echo "League $FPL_LEAGUE_ID"
+
+      - name: Sync
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/service-account.json
+          FPL_LEAGUE_ID: ${{ vars.FPL_LEAGUE_ID }}
+        run: node scripts/fetch-fpl.mjs
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/service-account.json"

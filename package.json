@@ -16,10 +16,14 @@
     "test:watch": "node scripts/firebase.mjs emulators:exec --only firestore \"vitest\"",
     "deploy:rules": "node scripts/firebase.mjs deploy --only firestore:rules",
     "seed:gifts": "node scripts/seed-gifts.mjs",
-    "seed:gifts:emulator": "node scripts/seed-gifts.mjs --emulator"
+    "seed:gifts:emulator": "node scripts/seed-gifts.mjs --emulator",
+    "sync:fpl": "node scripts/fetch-fpl.mjs",
+    "sync:fpl:emulator": "node scripts/fetch-fpl.mjs --emulator",
+    "sync:fpl:dry": "node scripts/fetch-fpl.mjs --dry-run"
   },
   "dependencies": {
     "firebase": "^12.18.0",
+    "firebase-admin": "^14.3.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router": "^7.18.3"
@@ -37,7 +41,6 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.6",
-    "firebase-admin": "^14.3.0",
     "firebase-tools": "^15.29.0",
     "globals": "^17.12.0",
     "prettier": "^3.9.6",
