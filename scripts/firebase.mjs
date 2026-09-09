@@ -6,10 +6,11 @@
 // including the owner's, connecting to a Unix socket in that folder fails, so every selector
 // fails and the emulator exits with code 1. Pointing the JDK at a short directory fixes it.
 // Usage: node scripts/firebase.mjs <firebase args...>   e.g.  emulators:start --only auth,firestore
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import os from 'node:os'
+import path from 'node:path'
 
 const env = { ...process.env }
 if (
@@ -35,6 +36,23 @@ const args = process.argv.slice(2).filter((a) => {
   }
   return true
 })
+
+// On Windows, "java" on PATH is often Oracle's javapath shim, which starts the real JVM as a
+// grandchild. The CLI's shutdown then kills only the shim and the emulator JVM lingers, holding
+// port 8080 for the next run. Put the real JDK's bin first so the CLI spawns java.exe directly.
+if (os.platform() === 'win32') {
+  try {
+    // -XshowSettings prints to stderr.
+    const { stderr } = spawnSync('java', ['-XshowSettings:properties', '-version'], {
+      encoding: 'utf8',
+    })
+    const home = /java[.]home = (.+)/.exec(stderr ?? '')?.[1]?.trim()
+    const pathKey = Object.keys(env).find((k) => k.toUpperCase() === 'PATH') ?? 'Path'
+    if (home) env[pathKey] = path.join(home, 'bin') + path.delimiter + (env[pathKey] ?? '')
+  } catch {
+    // No java on PATH: let the CLI report that in its own words.
+  }
+}
 
 const bin = createRequire(import.meta.url).resolve('firebase-tools/lib/bin/firebase.js')
 const child = spawn(process.execPath, [bin, ...args], { stdio: 'inherit', env })
