@@ -1,14 +1,15 @@
 import type { SVGProps } from 'react'
 
-export type IconName = 'table' | 'draw' | 'gifts' | 'cabinet' | 'about' | 'admin'
+export type IconName = 'table' | 'draw' | 'gifts' | 'cabinet' | 'about' | 'clock' | 'admin'
 
+// Tab-bar icons from the design kit (assets/ui-icons), plus a shield for Admin.
 const paths: Record<IconName, string> = {
-  table: 'M4 6h16M4 12h16M4 18h10',
-  draw: 'M3 11h18v10H3zM12 11v10M3 11V8h18v3M12 8c-2-4-6-4-6-1s4 1 6 1zm0 0c2-4 6-4 6-1s-4 1-6 1z',
-  gifts: 'M3 9h18v6H3zM7 9v6M17 9v6M3 12h18',
-  cabinet:
-    'M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M9 21h6M10 17h4v4',
-  about: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 8h.01',
+  table: 'M4 5h16v15H4z M4 10h16 M10 5v15 M4 15h16',
+  draw: 'M4 8h16v12H4z M3 5h18v4H3z M12 5v15 M12 5C4 6 6 0 9 2z M12 5c8 1 6-5 3-3z',
+  gifts: 'M4 7h16v13H4z M3 4h18v4H3z M12 4v16',
+  cabinet: 'M4 4h16v16H4z M4 12h16 M8 8h2 M14 16h2',
+  about: 'M12 8v1 M12 12v5 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+  clock: 'M12 7v5l3 2 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
   admin: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6zM9 12l2 2 4-4',
 }
 
@@ -16,13 +17,13 @@ interface Props extends SVGProps<SVGSVGElement> {
   name: IconName
 }
 
-export default function Icon({ name, ...rest }: Props) {
+export default function Icon({ name, strokeWidth = 1.7, ...rest }: Props) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"

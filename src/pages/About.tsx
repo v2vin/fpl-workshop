@@ -1,47 +1,79 @@
 import type { ReactNode } from 'react'
-import Page from '../components/Page'
+import { Link } from 'react-router'
 import { WORKSHOP_NAME } from '../lib/config'
+import { useStandings } from '../lib/useFpl'
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  no,
+  title,
+  children,
+  sub,
+}: {
+  no: string
+  title: string
+  children: ReactNode
+  sub?: ReactNode
+}) {
   return (
-    <section className="border-pine-200 rounded-xl border bg-white p-4 text-sm text-stone-700 shadow-sm">
-      <h2 className="text-pitch-900 font-semibold">{title}</h2>
-      <div className="mt-2 space-y-2">{children}</div>
+    <section className="grid grid-cols-[27px_1fr] gap-2.5 border-b border-pine-200 py-6">
+      <span className="pt-1 font-mono text-[13px] text-pine-600">{no}</span>
+      <div>
+        <h2 className="display text-[23px] tracking-[-0.5px]">{title}</h2>
+        <p className="mt-2 text-[15px] leading-relaxed">{children}</p>
+        {sub && <p className="mt-2 text-sm text-stone-600">{sub}</p>}
+      </div>
     </section>
   )
 }
 
 export default function About() {
+  const standings = useStandings()
+  const friends = standings?.rows.length ? `${standings.rows.length} friends.` : 'A few friends.'
   return (
-    <Page title="About" intro="How the league and the draw work.">
-      <Section title="The league">
-        <p>
-          A private Fantasy Premier League mini league. Each calendar month has a winner: the
-          manager with the most points across the gameweeks whose deadline falls in that month,
-          after transfer costs, as FPL reports them.
+    <div>
+      <div className="border-b-[3px] border-pitch-800 pb-4">
+        <p className="eyebrow">Lilongwe / Malawi</p>
+        <h1 className="display my-4 text-[34px] leading-[1.04] tracking-[-1.6px] text-pitch-900">
+          A league with
+          <br />a sawdust habit.
+        </h1>
+        <p className="text-[15px] text-stone-600">
+          {friends} A monthly winner.
+          <br />
+          Something made by Vitumbiko.
         </p>
-        <p>If two managers tie, the higher season total wins. If that is level too, both win.</p>
+      </div>
+
+      <Section
+        no="01"
+        title="The league"
+        sub="Level on points at the top? Higher season total takes it. Still level, and both win."
+      >
+        Most points across the month’s gameweeks wins a handmade pine gift. A gameweek belongs to
+        the month its deadline falls in, and points count after transfer costs, as FPL reports them.
       </Section>
-      <Section title="The draw">
-        <p>
-          The month’s winner gets a small piece of solid pine. Which piece is decided by a random
-          pick among the gifts still available, made on the owner’s phone at the moment the code is
-          issued. The code is then sent to the winner on WhatsApp.
-        </p>
-        <p>
-          When the winner enters the code, the cards shuffle and land on the gift. That shuffle is
-          for show: the pick has already happened, so reloading the page, entering the code again or
-          trying a friend’s phone cannot change it. Each code works once, and only for the account
-          it was issued to.
-        </p>
+
+      <Section
+        no="02"
+        title="The draw"
+        sub="One manager. One use. Reloading, retrying or a friend’s phone cannot change the pick. Your revealed gift stays in your cabinet."
+      >
+        Your gift is chosen at random, from the pieces still available, at the moment Vitumbiko
+        issues your code. The shuffle you see afterwards is for show.
       </Section>
-      <Section title="The workshop">
-        <p>
-          Every gift is made by hand at {WORKSHOP_NAME} in Malawi, from solid pine with a matt clear
-          finish, and photographed as it is cut, glued and finished. Follow each build on the Gifts
-          page.
-        </p>
+
+      <Section
+        no="03"
+        title="The workshop"
+        sub="Follow your gift from the first cut to your shelf."
+      >
+        {WORKSHOP_NAME} is Vitumbiko’s one-man workshop. Solid pine, visible grain, useful little
+        things, photographed as they are cut, glued and finished.
       </Section>
-    </Page>
+
+      <Link to="/gifts" className="btn btn-text mt-4">
+        Look around →
+      </Link>
+    </div>
   )
 }

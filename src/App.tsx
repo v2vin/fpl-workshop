@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import RequireOwner from './components/RequireOwner'
 import About from './pages/About'
 import Admin from './pages/Admin'
+import AdminBuilds from './pages/AdminBuilds'
 import Cabinet from './pages/Cabinet'
 import Draw from './pages/Draw'
 import Gifts from './pages/Gifts'
@@ -22,6 +23,14 @@ export default function App() {
           element={
             <RequireOwner>
               <Admin />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="admin/builds"
+          element={
+            <RequireOwner>
+              <AdminBuilds />
             </RequireOwner>
           }
         />

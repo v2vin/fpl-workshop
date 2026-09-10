@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../lib/auth'
 import { LEAGUE_NAME } from '../lib/config'
@@ -6,7 +7,6 @@ import EntryIdPrompt from './EntryIdPrompt'
 import Icon, { type IconName } from './Icon'
 import InstallHint from './InstallHint'
 import SignInButton from './SignInButton'
-import UserMenu from './UserMenu'
 
 const tabs: { to: string; label: string; icon: IconName }[] = [
   { to: '/', label: 'Table', icon: 'table' },
@@ -16,6 +16,72 @@ const tabs: { to: string; label: string; icon: IconName }[] = [
   { to: '/about', label: 'About', icon: 'about' },
 ]
 
+/** Avatar in the header; tapping it opens a small account menu with sign-out. */
+function AccountMenu() {
+  const { user, signOut } = useAuth()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent && e.key !== 'Escape') return
+      if (e instanceof MouseEvent && ref.current?.contains(e.target as Node)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', close)
+    return () => {
+      document.removeEventListener('mousedown', close)
+      document.removeEventListener('keydown', close)
+    }
+  }, [open])
+
+  if (!user) return null
+  const initial = (user.displayName ?? user.email ?? '?').charAt(0).toUpperCase()
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-label="Your account"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-pine-100 text-sm font-bold text-pitch-800"
+      >
+        {user.photoURL ? (
+          <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="h-9 w-9" />
+        ) : (
+          initial
+        )}
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="card absolute top-11 right-0 z-20 w-56 p-3 text-sm text-stone-900"
+        >
+          <p className="truncate font-semibold">{user.displayName ?? 'Manager'}</p>
+          {user.email && <p className="truncate text-xs text-stone-600">{user.email}</p>}
+          <NavLink
+            to="/cabinet"
+            onClick={() => setOpen(false)}
+            className="btn btn-text mt-2 block text-left"
+          >
+            Your shelf →
+          </NavLink>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => void signOut()}
+            className="btn btn-text block text-left"
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Layout() {
   const { user, loading, isOwner } = useAuth()
   const manager = useManager(user?.uid)
@@ -23,38 +89,40 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="bg-pitch-800 text-pine-100 sticky top-0 z-10 shadow-md">
-        <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
+      <header className="sticky top-0 z-10 border-b-[3px] border-pine-300 bg-pitch-800 text-pine-100">
+        <div className="mx-auto flex h-16 max-w-md items-center gap-2 px-3">
           <NavLink to="/" className="flex items-center gap-2">
-            <span className="bg-pine-300 inline-block h-3 w-8 rounded-sm" aria-hidden="true" />
-            <span className="text-lg font-bold tracking-tight whitespace-nowrap">
+            <img src="/brand/mark-reversed.svg" alt="" className="h-8 w-8" />
+            <span className="display text-base font-bold tracking-[-0.7px] whitespace-nowrap">
               {LEAGUE_NAME}
             </span>
           </NavLink>
+          <span className="flex-1" />
           {loading ? null : user ? (
-            <div className="flex items-center gap-2">
+            <>
               {isOwner && (
                 <NavLink
                   to="/admin"
                   className={({ isActive }) =>
-                    `flex items-center gap-1 rounded-full px-3 py-1 text-sm ${
-                      isActive ? 'bg-pine-300 text-pitch-900' : 'text-pine-200 hover:bg-pitch-700'
+                    `rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                      isActive
+                        ? 'border-pine-300 bg-pine-300 text-pitch-900'
+                        : 'border-pitch-500 text-pine-100 hover:bg-pitch-700'
                     }`
                   }
                 >
-                  <Icon name="admin" className="h-4 w-4" />
                   Admin
                 </NavLink>
               )}
-              <UserMenu />
-            </div>
+              <AccountMenu />
+            </>
           ) : (
-            <SignInButton compact />
+            <SignInButton variant="header" />
           )}
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-5 pb-28">
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-6 pb-28">
         <InstallHint />
         {needsEntryId && user && <EntryIdPrompt uid={user.uid} />}
         <Outlet />
@@ -62,25 +130,29 @@ export default function Layout() {
 
       <nav
         aria-label="Main"
-        className="border-pine-200 fixed inset-x-0 bottom-0 z-10 border-t bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-10 border-t border-pine-200 bg-white pb-[env(safe-area-inset-bottom)]"
       >
-        <ul className="mx-auto grid max-w-md grid-cols-5">
+        <ul className="mx-auto grid h-[70px] max-w-md grid-cols-5 px-2">
           {tabs.map((t) => (
             <li key={t.to}>
               <NavLink
                 to={t.to}
                 end={t.to === '/'}
                 className={({ isActive }) =>
-                  `flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${
-                    isActive ? 'text-pitch-700' : 'text-stone-500 hover:text-stone-800'
+                  `flex h-full flex-col items-center gap-1 border-t-[3px] pt-2.5 text-xs font-semibold ${
+                    isActive
+                      ? 'border-pitch-700 text-pitch-700'
+                      : 'border-transparent text-stone-600'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <span className={`rounded-full px-3 py-0.5 ${isActive ? 'bg-pine-200' : ''}`}>
-                      <Icon name={t.icon} className="h-5 w-5" />
-                    </span>
+                    <Icon
+                      name={t.icon}
+                      className="h-[22px] w-[22px]"
+                      strokeWidth={isActive ? 2.3 : 1.7}
+                    />
                     {t.label}
                   </>
                 )}

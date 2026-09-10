@@ -11,7 +11,7 @@ export default defineConfig({
     // Installable on iOS and Android from the site itself (CLAUDE.md, "Mobile apps").
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'favicon.ico', 'icons/apple-touch-icon.png', 'brand/*.svg'],
       manifest: {
         name: 'FPL Workshop',
         short_name: 'FPL Workshop',

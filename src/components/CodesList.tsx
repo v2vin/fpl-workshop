@@ -1,3 +1,4 @@
+import Badge from './Badge'
 import type { Gift } from '../data/gifts'
 import { formatMonth } from '../lib/format'
 import { useCodes } from '../lib/useCodes'
@@ -9,14 +10,14 @@ export default function CodesList({ gifts }: { gifts: Gift[] }) {
   const managers = useManagers()
   if (!codes) return null
   return (
-    <section className="border-pine-200 rounded-xl border bg-white p-4 shadow-sm">
-      <h2 className="font-semibold">Issued codes</h2>
+    <section>
+      <h2 className="display mt-6 mb-3 text-[23px]">Issued codes</h2>
       {codes.length === 0 ? (
-        <p className="mt-1 text-sm text-stone-600">
+        <div className="card p-4 text-sm text-stone-600">
           None yet. The first month is still being played.
-        </p>
+        </div>
       ) : (
-        <ul className="divide-pine-100 mt-2 divide-y text-sm">
+        <ul className="space-y-3">
           {codes.map((c) => {
             const gift = gifts.find((g) => g.id === c.giftId)
             const name =
@@ -24,20 +25,18 @@ export default function CodesList({ gifts }: { gifts: Gift[] }) {
               gift?.wonByName ??
               c.winnerUid
             return (
-              <li key={c.code} className="flex items-center justify-between gap-2 py-2">
-                <div className="min-w-0">
-                  <p className="font-mono font-semibold">{c.code}</p>
-                  <p className="truncate text-xs text-stone-600">
-                    {formatMonth(c.month)} · {name} · {gift?.name ?? c.giftId}
-                  </p>
+              <li key={c.code} className="card p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <b className="font-mono">{c.code}</b>
+                  <Badge tone={c.redeemed ? 'live' : 'pine'}>
+                    {c.redeemed ? 'Revealed' : 'Waiting'}
+                  </Badge>
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                    c.redeemed ? 'bg-pitch-100 text-pitch-800' : 'bg-stone-100 text-stone-600'
-                  }`}
-                >
-                  {c.redeemed ? 'Revealed' : 'Waiting'}
-                </span>
+                <p className="mt-3 text-sm text-stone-600">
+                  {formatMonth(c.month)} · {name}
+                  <br />
+                  {gift?.name ?? c.giftId}
+                </p>
               </li>
             )
           })}

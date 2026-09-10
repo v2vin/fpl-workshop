@@ -1,5 +1,6 @@
 import { useCallback, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import GiftCard from '../components/GiftCard'
 import Notice from '../components/Notice'
 import Page from '../components/Page'
 import ShareButton from '../components/ShareButton'
@@ -12,6 +13,22 @@ import { formatMonth } from '../lib/format'
 import { useGifts } from '../lib/useGifts'
 
 type Phase = 'idle' | 'looking' | 'shuffle' | 'reveal' | 'already'
+
+/** Pine ground with the workshop stamp, standing in until real photography exists. */
+function WorkshopObject() {
+  return (
+    <div className="relative -mx-4 mt-5 bg-pine-100">
+      <div className="grid aspect-[4/3] w-full place-items-center">
+        <img src="/brand/mark.svg" alt="" className="h-28 w-28 opacity-90" />
+      </div>
+      <span className="absolute right-3.5 bottom-3.5 rotate-[-4deg] border border-pine-600 bg-pine-50 px-2.5 py-1.5 text-[9px] leading-[1.7] tracking-[1px] text-pine-800">
+        MADE BY HAND
+        <br />
+        <b>VMS WOODWORK</b>
+      </span>
+    </div>
+  )
+}
 
 export default function Draw() {
   const { user, loading } = useAuth()
@@ -51,7 +68,7 @@ export default function Draw() {
     redeemCode(code.code).catch((err: unknown) => {
       if (err instanceof DrawError && err.kind === 'already-redeemed') return
       console.error(err)
-      setRedeemNote('The gift is yours, but the code could not be marked as used. Tell the owner.')
+      setRedeemNote('The gift is yours, but the code could not be marked as used. Tell Vitumbiko.')
     })
   }, [code])
 
@@ -63,75 +80,85 @@ export default function Draw() {
     setPhase('idle')
   }
 
-  const intro = 'Won the month? Enter your code and see what is coming out of the workshop.'
-  if (loading) return <Page title="The draw" intro={intro} />
+  if (loading) return <Page title="Now for the good wood." />
+
   if (!user) {
     return (
-      <Page title="The draw" intro={intro}>
-        <Notice>
-          <p className="mb-3">Sign in with the account you gave the owner to enter your code.</p>
-          <SignInButton />
-        </Notice>
+      <Page title="Won the month?" intro="There’s something on the bench for you.">
+        <WorkshopObject />
+        <div className="card p-4">
+          <h2 className="display text-xl">Your gift starts here</h2>
+          <p className="mt-1 mb-4 text-sm text-stone-600">
+            Sign in with the Google account you gave Vitumbiko, then enter your winner’s code.
+          </p>
+          <SignInButton variant="card" />
+        </div>
+        <p className="text-xs text-stone-600">Only the manager named on the code can reveal it.</p>
       </Page>
     )
   }
 
   if (phase === 'shuffle' && code) {
     return (
-      <Page title="The draw">
+      <section>
         <Shuffle gifts={shuffleGifts} finalGiftId={code.giftId} onDone={onShuffleDone} />
-      </Page>
+      </section>
     )
   }
 
   if ((phase === 'reveal' || phase === 'already') && code && gift) {
+    const firstName = (user.displayName ?? 'you').split(' ')[0]
     return (
-      <Page title={phase === 'reveal' ? 'It’s yours' : 'Already revealed'}>
+      <section className="space-y-4">
         {phase === 'already' && (
-          <Notice>This code has been used already. Here is what it won.</Notice>
+          <Notice>You’ve already revealed this gift. It’s still yours.</Notice>
         )}
-        <div className="border-pine-400 overflow-hidden rounded-2xl border-2 bg-white shadow-md">
-          <img
-            src={gift.photos[0] ?? `/gifts/${gift.id}/hero.svg`}
-            alt={gift.name}
-            className="aspect-[4/3] w-full object-cover"
-          />
-          <div className="p-4">
-            <p className="text-pine-700 text-xs font-semibold tracking-wide uppercase">
-              {formatMonth(code.month)} winner
-            </p>
-            <h2 className="text-pitch-900 mt-1 text-2xl font-bold">{gift.name}</h2>
-            <p className="mt-1 text-stone-700">{gift.blurb}</p>
-            <p className="mt-2 text-xs text-stone-500">
-              {gift.materials}. About {gift.hours} h in the workshop. Watch it being built on the
-              Gifts page.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <ShareButton text={shareText(gift, code.month)} />
-              <Link to="/cabinet" className="text-pitch-700 text-sm font-medium underline">
-                See your cabinet
-              </Link>
-            </div>
-            {redeemNote && <p className="mt-3 text-sm text-red-700">{redeemNote}</p>}
-          </div>
+        <div>
+          <span className="mt-1 mb-5 inline-block rotate-[-2deg] bg-pine-200 px-2 py-1 text-[10px] font-bold tracking-[1.2px] text-pine-800">
+            A MONTH WELL PLAYED
+          </span>
+          <p className="eyebrow text-[10px]">{formatMonth(code.month)} winner</p>
+          <h1 className="display mt-2 text-[36px] leading-[1.04] tracking-[-1.7px] text-pitch-900">
+            Nice one, {firstName}.
+          </h1>
+          <p className="mt-3 text-sm text-stone-600">A little something for your shelf.</p>
         </div>
+        <GiftCard gift={gift} framed />
+        <ShareButton text={shareText(gift, code.month)} className="w-full" />
+        <Link to="/cabinet" className="btn btn-text w-full">
+          See your cabinet →
+        </Link>
+        {redeemNote && <Notice error>{redeemNote}</Notice>}
         {phase === 'already' && (
-          <button type="button" onClick={reset} className="text-pitch-700 text-sm underline">
+          <button type="button" onClick={reset} className="btn btn-text w-full">
             Enter another code
           </button>
         )}
-      </Page>
+      </section>
     )
   }
 
+  const checking = phase === 'looking'
   return (
-    <Page title="The draw" intro={intro}>
-      <form
-        onSubmit={onSubmit}
-        className="border-pine-200 rounded-xl border bg-white p-4 shadow-sm"
-      >
-        <label htmlFor="code" className="block text-sm font-medium text-stone-700">
-          Your code
+    <Page
+      eyebrow="The month is yours"
+      title={
+        <>
+          Now for the
+          <br />
+          good wood.
+        </>
+      }
+      intro="One code. Something to keep."
+    >
+      <WorkshopObject />
+      <form onSubmit={onSubmit} className="pt-2">
+        <h2 className="display text-2xl">Got your code?</h2>
+        <p className="mt-1 text-sm text-stone-600">
+          Vitumbiko sends it to the monthly winner on WhatsApp.
+        </p>
+        <label htmlFor="code" className="label">
+          Your winner’s code
         </label>
         <input
           id="code"
@@ -141,16 +168,19 @@ export default function Draw() {
           autoCapitalize="characters"
           autoComplete="off"
           spellCheck={false}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 font-mono text-lg tracking-wider"
+          className="input border-b-[3px] border-pine-600 font-mono text-lg tracking-wider uppercase"
         />
+        {error && <Notice error>{error}</Notice>}
         <button
           type="submit"
-          disabled={phase === 'looking' || input.trim().length < 14}
-          className="bg-pitch-700 mt-3 w-full rounded-lg px-4 py-2 font-medium text-white disabled:opacity-50"
+          disabled={checking || input.trim().length < 14}
+          className="btn btn-primary mt-5 w-full"
         >
-          {phase === 'looking' ? 'Checking' : 'Reveal my gift'}
+          {checking ? 'Checking your code…' : 'Reveal my gift →'}
         </button>
-        {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+        <p className="mt-4 text-xs text-stone-600">
+          Your gift is already chosen. The shuffle is for show.
+        </p>
       </form>
     </Page>
   )

@@ -3,8 +3,9 @@ import type { Gift } from '../data/gifts'
 import { shuffleDelay, shuffleSequence } from '../lib/draw'
 
 /**
- * The shuffle is theatre: the gift was chosen when the owner issued the code. This lights up
- * cards at random, slows down and lands on the one already drawn, then calls onDone.
+ * The shuffle is theatre: the gift was chosen when the owner issued the code. Tiles light up at
+ * random, slow down and land on the one already drawn, then onDone fires. With reduced motion
+ * preferred it lands straight away.
  */
 export default function Shuffle({
   gifts,
@@ -22,7 +23,8 @@ export default function Shuffle({
       0,
       gifts.findIndex((g) => g.id === finalGiftId),
     )
-    const seq = shuffleSequence(gifts.length, finalIndex)
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const seq = reduce ? [finalIndex] : shuffleSequence(gifts.length, finalIndex)
     let i = 0
     let timer: ReturnType<typeof setTimeout>
     const step = () => {
@@ -37,25 +39,30 @@ export default function Shuffle({
 
   return (
     <div aria-live="polite">
-      <p className="text-pitch-800 mb-3 text-center text-sm font-medium">Drawing…</p>
-      <ul className="grid grid-cols-3 gap-2">
+      <h1 className="display text-[30px] leading-[1.04] tracking-[-1.25px] text-pitch-900">
+        From the workshop…
+      </h1>
+      <p className="mt-2 text-sm text-stone-600">Let’s see what’s heading to your shelf.</p>
+      <ul className="mt-5 grid grid-cols-3 gap-[7px]">
         {gifts.map((g, i) => (
           <li
             key={g.id}
-            className={`overflow-hidden rounded-lg border transition-all duration-150 ${
+            className={`grid min-h-[66px] place-items-center rounded-lg border border-b-[3px] border-pine-200 px-1.5 py-1.5 text-center text-[11px] leading-tight transition-colors duration-100 ${
               i === active
-                ? 'border-pine-500 ring-pine-300 scale-105 ring-4'
-                : 'border-pine-200 opacity-60'
+                ? 'bg-pine-300 text-pitch-900 outline-2 outline-pitch-700'
+                : 'bg-white text-stone-700'
             }`}
           >
-            <img
-              src={g.photos[0] ?? `/gifts/${g.id}/hero.svg`}
-              alt=""
-              className="aspect-[4/3] w-full object-cover"
-            />
+            <span>
+              <span className="mx-auto mb-1.5 block h-[5px] w-[17px] bg-pine-300" />
+              {g.name}
+            </span>
           </li>
         ))}
       </ul>
+      <p className="mt-4 text-xs text-stone-600">
+        Your gift is already chosen. This is the fun bit.
+      </p>
     </div>
   )
 }

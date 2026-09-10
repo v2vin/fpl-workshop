@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#1b4d31"/>
-  <rect x="10" y="22" width="44" height="20" rx="3" fill="#e3c18b"/>
-  <path d="M12 28 C 24 26, 40 32, 52 28 M12 36 C 26 39, 38 33, 52 37" stroke="#b58a52" stroke-width="1.6" fill="none"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img"><title>FPL Workshop</title><rect width="200" height="200" rx="40" fill="#143a25"/><g transform="translate(25 25) scale(.75)"><path fill="#dbbb7e" d="M8 35h40l40 84-21 45z M154 35h40l-59 129-21-45z"/><path fill="#dbbb7e" d="M82 35h18v48l-33 81-21-44z M104 35h18l37 85-24 44-31-81z"/><circle cx="102" cy="92" r="17" fill="none" stroke="#dbbb7e" stroke-width="4"/><path d="M102 35v110" stroke="#fbf7ee" stroke-width="3"/><circle cx="102" cy="92" r="3" fill="#fbf7ee"/></g></svg>

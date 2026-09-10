@@ -1,13 +1,33 @@
 import { useState, type FormEvent } from 'react'
 import { setFplEntryId } from '../lib/managers'
 
-/** Shown once, after first sign-in, until the manager links their FPL team. */
+const LATER_KEY = 'fplw-entry-id-later'
+
+/** Shown after first sign-in until the manager links their FPL team, or taps Later for this visit. */
 export default function EntryIdPrompt({ uid }: { uid: string }) {
   const [value, setValue] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [later, setLater] = useState(() => {
+    try {
+      return sessionStorage.getItem(LATER_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
   const trimmed = value.trim()
   const valid = /^[0-9]{1,9}$/.test(trimmed) && Number(trimmed) > 0
+
+  if (later) return null
+
+  function dismiss() {
+    try {
+      sessionStorage.setItem(LATER_KEY, '1')
+    } catch {
+      // Private mode: the prompt simply returns next visit.
+    }
+    setLater(true)
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -25,35 +45,31 @@ export default function EntryIdPrompt({ uid }: { uid: string }) {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="border-pine-300 bg-pine-100 mb-5 rounded-xl border p-4 shadow-sm"
-    >
-      <h2 className="text-pitch-900 font-semibold">Link your FPL team</h2>
-      <p className="mt-1 text-sm text-stone-700">
-        A one-off. On fantasy.premierleague.com open Points: the number after{' '}
-        <code className="rounded bg-white px-1">/entry/</code> in the address bar is your team id.
-        It cannot be changed later, so check it twice.
+    <form onSubmit={onSubmit} className="card mb-5 p-4">
+      <h2 className="display text-xl">Link your FPL team</h2>
+      <p className="mt-1 text-sm text-stone-600">Find your row and keep your wins together.</p>
+      <label htmlFor="fpl-team-id" className="label">
+        FPL team id
+      </label>
+      <input
+        id="fpl-team-id"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="e.g. 483921"
+        className="input"
+      />
+      <p className="mt-1.5 text-xs text-stone-600">
+        The number in your FPL team’s points-page address. It cannot be changed later.
       </p>
-      <div className="mt-3 flex gap-2">
-        <input
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="e.g. 1234567"
-          aria-label="FPL team id"
-          className="min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-base"
-        />
-        <button
-          type="submit"
-          disabled={!valid || busy}
-          className="bg-pitch-700 rounded-lg px-4 py-2 font-medium text-white disabled:opacity-50"
-        >
-          {busy ? 'Saving' : 'Save'}
-        </button>
-      </div>
-      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="mt-2 text-sm text-pine-800">{error}</p>}
+      <button type="submit" disabled={!valid || busy} className="btn btn-primary mt-4 w-full">
+        {busy ? 'Linking…' : 'Link my team'}
+      </button>
+      <button type="button" onClick={dismiss} className="btn btn-text mt-1 w-full">
+        Later
+      </button>
     </form>
   )
 }

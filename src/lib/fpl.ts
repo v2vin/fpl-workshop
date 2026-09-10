@@ -105,11 +105,17 @@ const monthConverter: FirestoreDataConverter<Month> = {
 }
 
 /** Live `standings/current`; `null` until the first sync has run. */
-export function watchStandings(onChange: (s: Standings | null) => void): Unsubscribe {
+export function watchStandings(
+  onChange: (s: Standings | null) => void,
+  onError?: (err: unknown) => void,
+): Unsubscribe {
   return onSnapshot(
     doc(db, 'standings', 'current').withConverter(standingsConverter),
     (snap) => onChange(snap.exists() ? snap.data() : null),
-    (err) => console.error('standings snapshot failed', err),
+    (err) => {
+      console.error('standings snapshot failed', err)
+      onError?.(err)
+    },
   )
 }
 

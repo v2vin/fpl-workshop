@@ -1,11 +1,34 @@
 import { useEffect, useState } from 'react'
 import { watchMonth, watchStandings, type Month, type Standings } from './fpl'
 
+export interface StandingsState {
+  /** `undefined` while loading, `null` before the first sync. */
+  standings: Standings | null | undefined
+  /** True when the live subscription failed; the last value, if any, is still shown. */
+  error: boolean
+}
+
+/** `standings/current`, live, with a flag for a broken subscription. */
+export function useStandingsState(): StandingsState {
+  const [state, setState] = useState<{ value: Standings | null } | null>(null)
+  const [error, setError] = useState(false)
+  useEffect(
+    () =>
+      watchStandings(
+        (value) => {
+          setState({ value })
+          setError(false)
+        },
+        () => setError(true),
+      ),
+    [],
+  )
+  return { standings: state ? state.value : undefined, error }
+}
+
 /** `standings/current`, live. `undefined` while loading, `null` before the first sync. */
 export function useStandings(): Standings | null | undefined {
-  const [state, setState] = useState<{ value: Standings | null } | null>(null)
-  useEffect(() => watchStandings((value) => setState({ value })), [])
-  return state ? state.value : undefined
+  return useStandingsState().standings
 }
 
 /** `months/{month}`, live. `undefined` while loading or with no month, `null` if it does not exist. */

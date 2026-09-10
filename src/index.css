@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* Two palettes: pine (the gifts) and pitch (the football). */
+/* Two palettes: pine (the gifts) and pitch (the football). Tokens match the design kit. */
 @theme {
   --color-pine-50: #fbf7ee;
   --color-pine-100: #f3e7cf;
@@ -25,6 +25,9 @@
   --color-pitch-900: #0e2a1b;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Montserrat is self-hosted (imported in main.tsx) so the PWA works offline. */
+  --font-display: 'Montserrat Variable', Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
 }
 
 html {
@@ -33,4 +36,51 @@ html {
 
 body {
   @apply bg-pine-50 text-stone-900 antialiased;
+}
+
+/* Shared pieces from the design kit: matchday sheets and workshop labels. */
+@layer components {
+  .eyebrow {
+    @apply text-[11px] font-extrabold tracking-[1.25px] text-pine-700 uppercase;
+  }
+  .display {
+    @apply font-display font-bold tracking-[-0.04em];
+  }
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-pine-200 bg-white px-4 py-2.5 font-semibold text-pitch-700 disabled:opacity-55;
+  }
+  .btn-primary {
+    @apply border-pitch-700 bg-pitch-700 text-white;
+    box-shadow: 0 2px 0 var(--color-pitch-900);
+  }
+  .btn-whatsapp {
+    @apply border-0 text-pitch-900;
+    background: #25d366;
+  }
+  .btn-text {
+    @apply min-h-9 border-0 bg-transparent px-0 text-pitch-700 underline underline-offset-4;
+    box-shadow: none;
+  }
+  .card {
+    @apply rounded-xl border border-pine-200 bg-white;
+    box-shadow: 0 2px 0 var(--color-pine-100);
+  }
+  .input {
+    @apply min-h-[46px] w-full rounded-lg border border-pine-300 bg-white px-3 py-3 text-stone-900;
+  }
+  .label {
+    @apply mt-4 mb-1.5 block text-sm font-semibold;
+  }
+  .notice {
+    @apply my-4 rounded-lg bg-pine-100 px-3.5 py-3 text-sm;
+  }
+  .notice-error {
+    @apply border border-pine-700 text-pine-800;
+  }
+  .section-heading {
+    @apply mt-7 mb-3 flex items-baseline justify-between border-b-2 border-pitch-800 pb-2;
+  }
+  .skeleton {
+    @apply my-3 h-10 rounded-lg bg-pine-100;
+  }
 }

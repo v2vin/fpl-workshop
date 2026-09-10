@@ -1,9 +1,15 @@
 import type { ReactNode } from 'react'
 
-/** A quiet card for placeholder and status text. */
-export default function Notice({ children }: { children: ReactNode }) {
+/** A quiet pine slip for placeholder, status and error text. */
+export default function Notice({
+  children,
+  error = false,
+}: {
+  children: ReactNode
+  error?: boolean
+}) {
   return (
-    <div className="border-pine-200 rounded-xl border bg-white p-4 text-sm text-stone-700 shadow-sm">
+    <div className={`notice ${error ? 'notice-error' : ''}`} role={error ? 'alert' : undefined}>
       {children}
     </div>
   )

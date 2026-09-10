@@ -2,9 +2,9 @@ import type { StandingsRow } from '../lib/fpl'
 
 function Movement({ row }: { row: StandingsRow }) {
   const delta = row.lastRank - row.rank
-  if (delta > 0) return <span className="text-pitch-600 text-xs font-bold">▲{delta}</span>
-  if (delta < 0) return <span className="text-xs font-bold text-red-600">▼{-delta}</span>
-  return <span className="text-xs text-stone-400">•</span>
+  if (delta > 0) return <small className="block text-xs text-pitch-600">▲{delta}</small>
+  if (delta < 0) return <small className="block text-xs text-pine-700">▼{-delta}</small>
+  return <small className="block text-xs text-stone-400">•</small>
 }
 
 export default function StandingsTable({
@@ -15,35 +15,39 @@ export default function StandingsTable({
   myEntry: number | null
 }) {
   return (
-    <section className="border-pine-200 overflow-hidden rounded-xl border bg-white shadow-sm">
-      <table className="w-full text-sm">
-        <thead className="bg-pine-50 text-xs text-stone-500 uppercase">
-          <tr>
-            <th className="w-10 px-2 py-2 text-left">#</th>
-            <th className="px-2 py-2 text-left">Manager</th>
-            <th className="w-12 px-2 py-2 text-right">GW</th>
-            <th className="w-16 px-2 py-2 text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody className="divide-pine-100 divide-y">
-          {rows.map((r) => (
-            <tr key={r.entryId} className={r.entryId === myEntry ? 'bg-pine-50' : ''}>
-              <td className="px-2 py-2 align-top">
-                <div className="flex items-center gap-1">
-                  <span className="text-pitch-900 font-bold">{r.rank}</span>
-                  <Movement row={r} />
-                </div>
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="border-b border-pine-200 text-left text-xs font-medium text-stone-600">
+          <th className="px-1.5 py-3">#</th>
+          <th className="px-1.5 py-3">Manager / team</th>
+          <th className="px-1.5 py-3 text-right">GW</th>
+          <th className="px-1.5 py-3 text-right">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => {
+          const own = r.entryId === myEntry
+          return (
+            <tr key={r.entryId} className={`border-b border-pine-100 ${own ? 'bg-pitch-50' : ''}`}>
+              <td
+                className={`px-1.5 py-3.5 align-top ${own ? 'shadow-[inset_3px_0_var(--color-pitch-700)]' : ''}`}
+              >
+                <span className="font-semibold">{r.rank}</span>
+                <Movement row={r} />
               </td>
-              <td className="min-w-0 px-2 py-2">
-                <p className="truncate font-medium">{r.playerName}</p>
-                <p className="truncate text-xs text-stone-500">{r.teamName}</p>
+              <td className="min-w-0 px-1.5 py-3.5">
+                <span className="block truncate font-semibold">
+                  {r.playerName}
+                  {own && <span className="font-normal text-stone-600"> · you</span>}
+                </span>
+                <small className="block truncate text-xs text-stone-600">{r.teamName}</small>
               </td>
-              <td className="px-2 py-2 text-right font-mono">{r.eventPoints}</td>
-              <td className="px-2 py-2 text-right font-mono font-semibold">{r.totalPoints}</td>
+              <td className="px-1.5 py-3.5 text-right font-mono">{r.eventPoints}</td>
+              <td className="px-1.5 py-3.5 text-right font-mono font-semibold">{r.totalPoints}</td>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
+          )
+        })}
+      </tbody>
+    </table>
   )
 }

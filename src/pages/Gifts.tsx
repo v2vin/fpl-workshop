@@ -1,18 +1,19 @@
 import GiftCard from '../components/GiftCard'
-import Notice from '../components/Notice'
 import Page from '../components/Page'
 import { useGifts } from '../lib/useGifts'
 
 export default function Gifts() {
-  const { gifts, live, loading } = useGifts()
+  const { gifts } = useGifts()
   return (
-    <Page title="The gifts" intro="Eighteen pieces of solid pine, one drawn each month.">
-      {!loading && !live && (
-        <Notice>Build progress appears here once the season is under way.</Notice>
-      )}
-      <ul className="grid grid-cols-2 gap-3">
-        {gifts.map((g) => (
-          <GiftCard key={g.id} gift={g} />
+    <Page
+      title="Pick your favourite."
+      intro={`${gifts.length} pine gifts. One good month to win one.`}
+    >
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-6 pt-1">
+        {gifts.map((g, i) => (
+          <li key={g.id}>
+            <GiftCard gift={g} number={i + 1} />
+          </li>
         ))}
       </ul>
     </Page>
