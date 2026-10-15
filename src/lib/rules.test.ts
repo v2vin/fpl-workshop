@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Entry } from './entries'
 import type { Month } from './fpl'
 import { holdUntil, ineligibility, leagueDate, resolveMonth } from './rules'
+import { hasTeamTag, newTeamCode, suggestedTeamName } from './teamCode'
 
 const entry = (entryId: number, patch: Partial<Entry> = {}): Entry => ({
   entryId,
@@ -123,5 +124,30 @@ describe('monthly winner (rules 2.1–2.3)', () => {
 describe('prize hold (rule 4.3)', () => {
   it('lasts 60 days from the announcement', () => {
     expect(holdUntil('2026-11-02T10:00:00.000Z')).toBe('2027-01-01T10:00:00.000Z')
+  })
+})
+
+describe('team-name check (rule 4.2)', () => {
+  it('finds the code anywhere in the name, ignoring case and spaces', () => {
+    expect(hasTeamTag('Soya Pieces-FPL-433', '433')).toBe(true)
+    expect(hasTeamTag('soya pieces-fpl-433', '433')).toBe(true)
+    expect(hasTeamTag('Soya Pieces - FPL - 433', '433')).toBe(true)
+    expect(hasTeamTag('FPL-433 Soya-FPL-433!', '433')).toBe(true)
+  })
+  it('rejects a missing or different code', () => {
+    expect(hasTeamTag('Soya Pieces', '433')).toBe(false)
+    expect(hasTeamTag('Soya Pieces-FPL-434', '433')).toBe(false)
+    expect(hasTeamTag('Soya Pieces FPL 433', '433')).toBe(false)
+    expect(hasTeamTag('Soya Pieces-FPL-4330', '433')).toBe(false)
+  })
+  it('suggests a name that fits in 20 characters', () => {
+    expect(suggestedTeamName('Soya Pieces', '433')).toBe('Soya Pieces-FPL-433')
+    const long = suggestedTeamName("Infantino's Goons", '433')
+    expect(long).toBe("Infantino's-FPL-433")
+    expect(long.length).toBeLessThanOrEqual(20)
+    expect(hasTeamTag(long, '433')).toBe(true)
+  })
+  it('makes three-digit codes', () => {
+    for (let i = 0; i < 50; i++) expect(newTeamCode()).toMatch(/^[1-9][0-9]{2}$/)
   })
 })

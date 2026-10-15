@@ -7,9 +7,10 @@ import { adoptLink, releaseTeam, setClaimVerified, type Claim } from '../lib/cla
 import { FIRST_PRIZE_MONTH } from '../lib/config'
 import { updateEntry, type Entry, type EntryPatch } from '../lib/entries'
 import type { StandingsRow } from '../lib/fpl'
-import { formatMonth } from '../lib/format'
+import { formatDate, formatMonth } from '../lib/format'
 import type { ManagerWithUid } from '../lib/managers'
 import { INELIGIBLE_LABELS, ineligibility, isPrizeMonth } from '../lib/rules'
+import { teamTag } from '../lib/teamCode'
 import { useClaims } from '../lib/useClaims'
 import { useEntries } from '../lib/useEntries'
 import { useStandings } from '../lib/useFpl'
@@ -71,6 +72,21 @@ function TeamCard({
             <p>
               Picked by <b>{manager?.displayName ?? 'an unknown account'}</b>
               {manager?.hideName && <span className="text-stone-600"> · not to be named</span>}
+            </p>
+            <p className="mt-1 text-xs text-stone-600">
+              {claim.verified
+                ? claim.verifiedBy === 'team-name'
+                  ? `Confirmed by team name${claim.verifiedAt ? `, ${formatDate(claim.verifiedAt)}` : ''}.`
+                  : 'Confirmed by you.'
+                : claim.verifyCode
+                  ? `Waiting for “${teamTag(claim.verifyCode)}” in the FPL team name.`
+                  : 'No code yet; they can get one from their shelf.'}
+              {!claim.verified && claim.nameChangeBlocked && (
+                <span className="text-pine-800">
+                  {' '}
+                  FPL is blocking name changes for this team, so check a screenshot instead.
+                </span>
+              )}
             </p>
             <label className="mt-2 flex items-center gap-2">
               <input

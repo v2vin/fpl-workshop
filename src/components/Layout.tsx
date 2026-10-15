@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../lib/auth'
 import { LEAGUE_NAME } from '../lib/config'
+import { useClaims } from '../lib/useClaims'
+import { useStandings } from '../lib/useFpl'
 import { useManager } from '../lib/useManager'
 import TeamPicker from './TeamPicker'
 import Icon, { type IconName } from './Icon'
 import InstallHint from './InstallHint'
 import SignInButton from './SignInButton'
+import VerifyTeam from './VerifyTeam'
 
 const tabs: { to: string; label: string; icon: IconName }[] = [
   { to: '/', label: 'Table', icon: 'table' },
@@ -89,6 +92,16 @@ export default function Layout() {
   // The cabinet has its own picker in "Your account".
   const needsTeam =
     user !== null && manager != null && manager.fplEntryId === null && pathname !== '/cabinet'
+  // Picked a team but not confirmed yet: ask for the team-name code (rule 4.2).
+  const claims = useClaims(user !== null)
+  const standings = useStandings()
+  const entryId = manager?.fplEntryId ?? null
+  const myClaim = entryId !== null ? claims?.get(entryId) : undefined
+  const toVerify =
+    user !== null && myClaim?.uid === user.uid && !myClaim.verified && pathname !== '/cabinet'
+      ? myClaim
+      : undefined
+  const myTeamName = standings?.rows.find((r) => r.entryId === entryId)?.teamName ?? ''
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -128,6 +141,7 @@ export default function Layout() {
       <main className="mx-auto w-full max-w-md flex-1 px-4 pt-6 pb-28">
         <InstallHint />
         {needsTeam && user && <TeamPicker uid={user.uid} />}
+        {toVerify && <VerifyTeam claim={toVerify} teamName={myTeamName} />}
         <Outlet />
       </main>
 

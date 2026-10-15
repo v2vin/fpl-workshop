@@ -48,14 +48,26 @@ service cloud.firestore {
 
     // claims/{entryId}: which account plays which FPL team. The document id makes a team
     // claimable once (rule 1.4); managers/{uid}.fplEntryId makes an account claim one team.
-    // Read by signed-in users so the picker can show taken teams. The owner confirms a claim once
-    // the manager has shown they control the team (rule 4.2), and can release one.
+    // Read by signed-in users so the picker can show taken teams. A claim is confirmed once the
+    // manager has shown they control the team (rule 4.2): scripts/verify-teams.mjs (admin SDK)
+    // when verifyCode appears in the FPL team name, or the owner by hand. The owner can release.
     match /claims/{entryId} {
-      function claimKeys() { return request.resource.data.keys().hasOnly(['uid', 'claimedAt', 'verified']); }
+      function claimKeys() {
+        return request.resource.data.keys().hasOnly(['uid', 'claimedAt', 'verified',
+          'verifyCode', 'verifiedBy', 'verifiedAt', 'nameChangeBlocked']);
+      }
+      function validCode() {
+        return request.resource.data.verifyCode is string
+          && request.resource.data.verifyCode.matches('[0-9]{3}');
+      }
+      function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
       allow read: if signedIn();
-      allow create: if signedIn() && claimKeys()
+      allow create: if signedIn() && claimKeys() && validCode()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.verified == false
+        && request.resource.data.get('verifiedBy', null) == null
+        && request.resource.data.get('verifiedAt', null) == null
+        && request.resource.data.get('nameChangeBlocked', false) == false
         && request.resource.data.claimedAt is string
         && getAfter(managerPath(request.auth.uid)).data.fplEntryId == int(entryId);
       // Owner adopts a link made before claims existed, after checking it.
@@ -63,10 +75,14 @@ service cloud.firestore {
         && request.resource.data.uid is string
         && request.resource.data.verified is bool
         && get(managerPath(request.resource.data.uid)).data.fplEntryId == int(entryId);
+      // The claimant can get a (new) code until the claim is confirmed.
+      allow update: if signedIn() && resource.data.uid == request.auth.uid
+        && resource.data.verified == false
+        && changed().hasOnly(['verifyCode']) && validCode();
       allow update: if isOwner()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verified'])
+        && changed().hasOnly(['verified', 'verifiedBy', 'verifiedAt'])
         && request.resource.data.verified is bool;
-      // A manager can take back a wrong pick until the owner has confirmed it.
+      // A manager can take back a wrong pick until it is confirmed.
       allow delete: if isOwner()
         || (signedIn() && resource.data.uid == request.auth.uid
           && resource.data.verified == false

@@ -8,10 +8,11 @@ import Page from '../components/Page'
 import SignInButton from '../components/SignInButton'
 import StatusBadge from '../components/StatusBadge'
 import TeamPicker from '../components/TeamPicker'
+import VerifyTeam from '../components/VerifyTeam'
 import { useAuth } from '../lib/auth'
-import { releaseTeam } from '../lib/claims'
-import { WORKSHOP_NAME } from '../lib/config'
+import { releaseTeam, type Claim } from '../lib/claims'
 import { formatMonth } from '../lib/format'
+import type { Entry } from '../lib/entries'
 import { setHideName, type Manager } from '../lib/managers'
 import { useClaims } from '../lib/useClaims'
 import { useEntries } from '../lib/useEntries'
@@ -19,9 +20,17 @@ import { useGifts } from '../lib/useGifts'
 import { useManager } from '../lib/useManager'
 
 /** "Your account": the linked team and its confirmation (rules 1.4, 4.2), and naming (5.3). */
-function Account({ uid, manager }: { uid: string; manager: Manager }) {
-  const claims = useClaims(true)
-  const entries = useEntries()
+function Account({
+  uid,
+  manager,
+  claims,
+  entries,
+}: {
+  uid: string
+  manager: Manager
+  claims: Map<number, Claim> | undefined
+  entries: Map<number, Entry> | undefined
+}) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const id = manager.fplEntryId
@@ -60,7 +69,7 @@ function Account({ uid, manager }: { uid: string; manager: Manager }) {
             (mine?.verified ? (
               <Badge tone="live">Confirmed</Badge>
             ) : (
-              <Badge>Waiting for {WORKSHOP_NAME} to confirm</Badge>
+              <Badge>Not confirmed yet</Badge>
             ))}
         </dd>
         {id !== null && !mine?.verified && claims && (
@@ -98,6 +107,10 @@ export default function Cabinet() {
   const { user, loading, signOut } = useAuth()
   const manager = useManager(user?.uid)
   const { gifts } = useGifts()
+  const claims = useClaims(user !== null)
+  const entries = useEntries()
+  const myEntry = manager?.fplEntryId ?? null
+  const myClaim = myEntry !== null ? claims?.get(myEntry) : undefined
 
   const mine = user ? gifts.filter((g) => g.wonBy === user.uid) : []
   const wall = gifts
@@ -150,6 +163,13 @@ export default function Cabinet() {
   return (
     <Page title="Your shelf." intro="The points fade. The pine stays.">
       {manager?.fplEntryId === null && <TeamPicker uid={user.uid} allowLater={false} />}
+      {myClaim?.uid === user.uid && !myClaim.verified && (
+        <VerifyTeam
+          claim={myClaim}
+          teamName={entries?.get(myClaim.entryId)?.teamName ?? ''}
+          allowLater={false}
+        />
+      )}
       {mine.length === 0 ? (
         <div className="card px-4 py-10 text-center">
           <Icon name="cabinet" className="mx-auto mb-5 h-10 w-10 text-pine-600" />
@@ -179,7 +199,9 @@ export default function Cabinet() {
               <dt className="text-xs text-stone-600">Signed in as</dt>
               <dd>{manager?.displayName ?? user.displayName ?? 'Manager'}</dd>
             </div>
-            {manager && <Account uid={user.uid} manager={manager} />}
+            {manager && (
+              <Account uid={user.uid} manager={manager} claims={claims} entries={entries} />
+            )}
             <div>
               <dt className="text-xs text-stone-600">User id</dt>
               <dd className="font-mono text-xs break-all select-all">{user.uid}</dd>

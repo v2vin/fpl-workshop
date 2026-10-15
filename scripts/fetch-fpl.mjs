@@ -11,8 +11,8 @@
 // nothing, rather than storing a partial table.
 import { applicationDefault, initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
+import { fplGet } from './fpl-api.mjs'
 
-const FPL = 'https://fantasy.premierleague.com/api'
 const PROJECT_ID = 'fpl-workshop'
 // Prize rules read dates in Malawi time; keep in step with LEAGUE_TIME_ZONE in src/lib/config.ts.
 const TIME_ZONE = 'Africa/Blantyre'
@@ -40,25 +40,7 @@ if (!dryRun && !emulator) {
   )
 }
 
-async function getJson(path, attempt = 1) {
-  const url = `${FPL}${path}`
-  try {
-    const res = await fetch(url, {
-      headers: {
-        // FPL answers 403 to some default agents; a browser-like one is reliable.
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128 Safari/537.36',
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return await res.json()
-  } catch (err) {
-    if (attempt >= 3) fail(`${url} failed after ${attempt} attempts: ${err.message}`)
-    await new Promise((r) => setTimeout(r, 1500 * attempt))
-    return getJson(path, attempt + 1)
-  }
-}
+const getJson = (path) => fplGet(path).catch((err) => fail(err.message))
 
 // 1. Gameweeks -------------------------------------------------------------------------------
 const bootstrap = await getJson('/bootstrap-static/')

@@ -19,7 +19,9 @@
     "seed:gifts:emulator": "node scripts/seed-gifts.mjs --emulator",
     "sync:fpl": "node scripts/fetch-fpl.mjs",
     "sync:fpl:emulator": "node scripts/fetch-fpl.mjs --emulator",
-    "sync:fpl:dry": "node scripts/fetch-fpl.mjs --dry-run"
+    "sync:fpl:dry": "node scripts/fetch-fpl.mjs --dry-run",
+    "verify:teams": "node scripts/verify-teams.mjs",
+    "verify:teams:emulator": "node scripts/verify-teams.mjs --emulator"
   },
   "dependencies": {
     "@fontsource-variable/montserrat": "^5.3.0",

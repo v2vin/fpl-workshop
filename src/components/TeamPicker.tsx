@@ -69,8 +69,8 @@ export default function TeamPicker({
         <h2 className="display mt-2 text-xl">{chosen.playerName}</h2>
         <p className="text-sm text-stone-600">{chosen.teamName}</p>
         <p className="mt-3 text-sm text-stone-600">
-          {WORKSHOP_NAME} will check it’s really you before any prize is handed over, so pick only
-          your own team.
+          Next you’ll prove it by adding a short code to your FPL team name for a little while, so
+          pick only your own team.
         </p>
         {error && <p className="mt-2 text-sm text-pine-800">{error}</p>}
         <button

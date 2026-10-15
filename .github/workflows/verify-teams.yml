@@ -1,0 +1,48 @@
+# Confirms team claims whose FPL team name carries the manager's code (scripts/verify-teams.mjs,
+# prize rule 4.2). Free on a public repo. Needs the repository secret FIREBASE_SERVICE_ACCOUNT.
+name: Team check
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # every ten minutes; GitHub may start scheduled runs a little late
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-teams
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install (runtime dependencies only)
+        run: npm ci --omit=dev
+
+      - name: Check configuration
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Repository secret FIREBASE_SERVICE_ACCOUNT is missing"; exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/service-account.json"
+
+      - name: Check team names
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/service-account.json
+        run: node scripts/verify-teams.mjs
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/service-account.json"

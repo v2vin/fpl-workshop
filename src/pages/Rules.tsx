@@ -58,7 +58,10 @@ export default function Rules() {
             The app records every draw: when it happened, the gifts still available, and the one
             drawn.
           </li>
-          <li>Pick your own team in the app so the winner can be matched to an account.</li>
+          <li>
+            Pick your own team in the app, then prove it’s yours by adding the code the app gives
+            you to your FPL team name for a little while. The app confirms it on its own.
+          </li>
         </ul>
       </section>
 

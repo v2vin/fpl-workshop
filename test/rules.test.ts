@@ -77,12 +77,17 @@ async function seed() {
 }
 
 /** The app's claim: claims/{entryId} and managers/{uid}.fplEntryId in one batch. */
-function claim(f: ClientDb, uid: string, entryId: number, verified = false) {
+function claim(f: ClientDb, uid: string, entryId: number, extra: Record<string, unknown> = {}) {
   const b = writeBatch(f)
   b.set(doc(f, 'claims', String(entryId)), {
     uid,
     claimedAt: '2026-10-15T10:00:00.000Z',
-    verified,
+    verified: false,
+    verifyCode: '433',
+    verifiedBy: null,
+    verifiedAt: null,
+    nameChangeBlocked: false,
+    ...extra,
   })
   b.update(doc(f, 'managers', uid), { fplEntryId: entryId })
   return b.commit()
@@ -145,8 +150,16 @@ describe('claims (rules 1.4 and 4.2)', () => {
   it('a manager claims a free team together with their link', async () => {
     await assertSucceeds(claim(db(WINNER), WINNER, TEAM))
   })
+  it('a claim needs a three-digit code for the team-name check', async () => {
+    await assertFails(claim(db(WINNER), WINNER, TEAM, { verifyCode: null }))
+    await assertFails(claim(db(WINNER), WINNER, TEAM, { verifyCode: '43' }))
+    await assertFails(claim(db(WINNER), WINNER, TEAM, { verifyCode: 'abc' }))
+    await assertSucceeds(claim(db(WINNER), WINNER, TEAM, { verifyCode: '907' }))
+  })
   it('a claim cannot be self-verified or made for someone else', async () => {
-    await assertFails(claim(db(WINNER), WINNER, TEAM, true))
+    await assertFails(claim(db(WINNER), WINNER, TEAM, { verified: true }))
+    await assertFails(claim(db(WINNER), WINNER, TEAM, { verifiedBy: 'team-name' }))
+    await assertFails(claim(db(WINNER), WINNER, TEAM, { nameChangeBlocked: true }))
     const f = db(WINNER)
     const b = writeBatch(f)
     b.set(doc(f, 'claims', String(TEAM)), { uid: OTHER, claimedAt: 'x', verified: false })
@@ -166,22 +179,42 @@ describe('claims (rules 1.4 and 4.2)', () => {
     await updateDoc(doc(db(OWNER), 'claims', String(TEAM)), { verified: true })
     await assertFails(unclaim(db(WINNER), WINNER, TEAM))
   })
+  it('the claimant can get a new code until the claim is confirmed', async () => {
+    await claim(db(WINNER), WINNER, TEAM)
+    const ref = (uid: string) => doc(db(uid), 'claims', String(TEAM))
+    await assertSucceeds(updateDoc(ref(WINNER), { verifyCode: '512' }))
+    await assertFails(updateDoc(ref(WINNER), { verifyCode: '5120' }))
+    await assertFails(updateDoc(ref(WINNER), { verified: true }))
+    await assertFails(updateDoc(ref(OTHER), { verifyCode: '777' }))
+    await updateDoc(ref(OWNER), { verified: true })
+    await assertFails(updateDoc(ref(WINNER), { verifyCode: '600' }))
+  })
   it('nobody else can take back or confirm a claim', async () => {
     await assertFails(unclaim(db(WINNER), OTHER, OTHER_TEAM))
     await assertFails(updateDoc(doc(db(OTHER), 'claims', String(OTHER_TEAM)), { verified: true }))
   })
   it('the owner confirms and releases claims', async () => {
+    const ref = doc(db(OWNER), 'claims', String(OTHER_TEAM))
     await assertSucceeds(
-      updateDoc(doc(db(OWNER), 'claims', String(OTHER_TEAM)), { verified: true }),
+      updateDoc(ref, { verified: true, verifiedBy: 'owner', verifiedAt: '2026-10-15T12:00:00Z' }),
     )
-    await assertFails(updateDoc(doc(db(OWNER), 'claims', String(OTHER_TEAM)), { uid: WINNER }))
+    await assertFails(updateDoc(ref, { uid: WINNER }))
+    await assertFails(updateDoc(ref, { verifyCode: '111' }))
     await assertSucceeds(unclaim(db(OWNER), OTHER, OTHER_TEAM))
   })
   it('the owner can adopt a link made before claims existed', async () => {
     await env.withSecurityRulesDisabled(async (ctx) => {
       await updateDoc(doc(ctx.firestore(), 'managers', WINNER), { fplEntryId: TEAM })
     })
-    const claimDoc = { uid: WINNER, claimedAt: '2026-10-15T10:00:00.000Z', verified: true }
+    const claimDoc = {
+      uid: WINNER,
+      claimedAt: '2026-10-15T10:00:00.000Z',
+      verified: true,
+      verifyCode: null,
+      verifiedBy: 'owner',
+      verifiedAt: '2026-10-15T10:00:00.000Z',
+      nameChangeBlocked: false,
+    }
     await assertFails(setDoc(doc(db(WINNER), 'claims', String(TEAM)), claimDoc))
     await assertFails(setDoc(doc(db(OWNER), 'claims', '999'), claimDoc))
     await assertSucceeds(setDoc(doc(db(OWNER), 'claims', String(TEAM)), claimDoc))
