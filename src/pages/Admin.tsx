@@ -18,7 +18,10 @@ export default function Admin() {
       )}
       {live && <IssueCode gifts={gifts} />}
       {live && <CodesList gifts={gifts} />}
-      <Link to="/admin/builds" className="btn mt-2 w-full">
+      <Link to="/admin/teams" className="btn mt-2 w-full">
+        Teams and eligibility →
+      </Link>
+      <Link to="/admin/builds" className="btn w-full">
         Manage builds →
       </Link>
     </Page>

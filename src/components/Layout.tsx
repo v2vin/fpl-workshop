@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet } from 'react-router'
+import { NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../lib/auth'
 import { LEAGUE_NAME } from '../lib/config'
 import { useManager } from '../lib/useManager'
-import EntryIdPrompt from './EntryIdPrompt'
+import TeamPicker from './TeamPicker'
 import Icon, { type IconName } from './Icon'
 import InstallHint from './InstallHint'
 import SignInButton from './SignInButton'
@@ -85,14 +85,17 @@ function AccountMenu() {
 export default function Layout() {
   const { user, loading, isOwner } = useAuth()
   const manager = useManager(user?.uid)
-  const needsEntryId = user !== null && manager != null && manager.fplEntryId === null
+  const { pathname } = useLocation()
+  // The cabinet has its own picker in "Your account".
+  const needsTeam =
+    user !== null && manager != null && manager.fplEntryId === null && pathname !== '/cabinet'
 
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-10 border-b-[3px] border-pine-300 bg-pitch-800 text-pine-100">
         <div className="mx-auto flex h-16 max-w-md items-center gap-2 px-3">
           <NavLink to="/" className="flex items-center gap-2">
-            <img src="/brand/mark-reversed.svg" alt="" className="h-8 w-8" />
+            <img src="/brand/mark-reversed.svg" alt="" className="h-10 w-10" />
             <span className="display text-base font-bold tracking-[-0.7px] whitespace-nowrap">
               {LEAGUE_NAME}
             </span>
@@ -124,7 +127,7 @@ export default function Layout() {
 
       <main className="mx-auto w-full max-w-md flex-1 px-4 pt-6 pb-28">
         <InstallHint />
-        {needsEntryId && user && <EntryIdPrompt uid={user.uid} />}
+        {needsTeam && user && <TeamPicker uid={user.uid} />}
         <Outlet />
       </main>
 

@@ -32,15 +32,25 @@ export interface Standings {
 export interface MonthRow {
   entryId: number
   playerName: string
-  /** Net points across the month's gameweeks, after transfer costs. */
+  teamName: string
+  /**
+   * The month's points as FPL's own monthly league table counts them (rule 2.2): after transfer
+   * hits, except hits for the month's first gameweek, which FPL does not take off.
+   */
   points: number
+  /** The same points per gameweek, in the order of `Month.gameweeks`; the tie-break (rule 2.3). */
+  gwPoints: number[]
 }
 
-/** `months/{YYYY-MM}` — rows sorted by points, then season total. */
+/**
+ * `months/{YYYY-MM}` — every gameweek whose deadline falls in that calendar month in Malawi
+ * (rule 2.1). Rows sorted by points, then best single gameweek. Eligibility and the winner are
+ * worked out in the browser by src/lib/rules.ts, so owner changes apply without waiting for a sync.
+ */
 export interface Month {
   gameweeks: number[]
   rows: MonthRow[]
-  /** True once every gameweek in the month is finished. */
+  /** True once FPL has finished and processed every gameweek in the month (rule 2.2). */
   closed: boolean
 }
 
@@ -95,7 +105,9 @@ const monthConverter: FirestoreDataConverter<Month> = {
             return {
               entryId: num(o.entryId),
               playerName: str(o.playerName, 'Unknown'),
+              teamName: str(o.teamName),
               points: num(o.points),
+              gwPoints: Array.isArray(o.gwPoints) ? o.gwPoints.map((p) => num(p)) : [],
             }
           })
         : [],

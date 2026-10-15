@@ -8,11 +8,13 @@ import Shuffle from '../components/Shuffle'
 import SignInButton from '../components/SignInButton'
 import { giftById, type Gift } from '../data/gifts'
 import { useAuth } from '../lib/auth'
+import { WORKSHOP_NAME } from '../lib/config'
 import { DrawError, lookupCode, redeemCode, shareText, type Code } from '../lib/draw'
-import { formatMonth } from '../lib/format'
+import { formatDate, formatMonth } from '../lib/format'
+import { holdUntil } from '../lib/rules'
 import { useGifts } from '../lib/useGifts'
 
-type Phase = 'idle' | 'looking' | 'shuffle' | 'reveal' | 'already'
+type Phase = 'idle' | 'looking' | 'shuffle' | 'reveal' | 'already' | 'returned'
 
 /** Pine ground with the workshop stamp, standing in until real photography exists. */
 function WorkshopObject() {
@@ -24,7 +26,7 @@ function WorkshopObject() {
       <span className="absolute right-3.5 bottom-3.5 rotate-[-4deg] border border-pine-600 bg-pine-50 px-2.5 py-1.5 text-[9px] leading-[1.7] tracking-[1px] text-pine-800">
         MADE BY HAND
         <br />
-        <b>VMS WOODWORK</b>
+        <b>FPL WORKSHOP</b>
       </span>
     </div>
   )
@@ -49,7 +51,9 @@ export default function Draw() {
     try {
       const found = await lookupCode(input)
       setCode(found)
-      if (found.redeemed) {
+      if (found.returnedAt) {
+        setPhase('returned')
+      } else if (found.redeemed) {
         setPhase('already')
       } else {
         setShuffleGifts(gifts) // frozen copy so a live update cannot restart the shuffle
@@ -68,7 +72,9 @@ export default function Draw() {
     redeemCode(code.code).catch((err: unknown) => {
       if (err instanceof DrawError && err.kind === 'already-redeemed') return
       console.error(err)
-      setRedeemNote('The gift is yours, but the code could not be marked as used. Tell Vitumbiko.')
+      setRedeemNote(
+        `The gift is yours, but the code could not be marked as used. Tell ${WORKSHOP_NAME}.`,
+      )
     })
   }, [code])
 
@@ -89,7 +95,7 @@ export default function Draw() {
         <div className="card p-4">
           <h2 className="display text-xl">Your gift starts here</h2>
           <p className="mt-1 mb-4 text-sm text-stone-600">
-            Sign in with the Google account you gave Vitumbiko, then enter your winner’s code.
+            Sign in with Google, pick your FPL team, then enter your winner’s code.
           </p>
           <SignInButton variant="card" />
         </div>
@@ -103,6 +109,24 @@ export default function Draw() {
       <section>
         <Shuffle gifts={shuffleGifts} finalGiftId={code.giftId} onDone={onShuffleDone} />
       </section>
+    )
+  }
+
+  if (phase === 'returned' && code) {
+    return (
+      <Page title="This one went back on the shelf.">
+        <Notice>
+          The {formatMonth(code.month)} prize wasn’t collected within 60 days, so on{' '}
+          {formatDate(code.returnedAt ?? code.issuedAt)} it went back into the pool for a future
+          draw (rule 4.3).
+        </Notice>
+        <Link to="/rules" className="btn btn-text">
+          Prize rules →
+        </Link>
+        <button type="button" onClick={reset} className="btn btn-text w-full">
+          Enter another code
+        </button>
+      </Page>
     )
   }
 
@@ -124,6 +148,11 @@ export default function Draw() {
           <p className="mt-3 text-sm text-stone-600">A little something for your shelf.</p>
         </div>
         <GiftCard gift={gift} framed />
+        <Notice>
+          <b>Yours to collect until {formatDate(holdUntil(code.issuedAt))}.</b> Before handover,
+          show {WORKSHOP_NAME} you control your FPL team: a screenshot from your logged-in account
+          or a quick video call. You arrange and pay for collection or delivery, within Malawi.
+        </Notice>
         <ShareButton text={shareText(gift, code.month)} className="w-full" />
         <Link to="/cabinet" className="btn btn-text w-full">
           See your cabinet →
@@ -155,7 +184,7 @@ export default function Draw() {
       <form onSubmit={onSubmit} className="pt-2">
         <h2 className="display text-2xl">Got your code?</h2>
         <p className="mt-1 text-sm text-stone-600">
-          Vitumbiko sends it to the monthly winner on WhatsApp.
+          {WORKSHOP_NAME} sends it to the monthly winner on WhatsApp.
         </p>
         <label htmlFor="code" className="label">
           Your winner’s code

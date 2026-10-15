@@ -40,40 +40,52 @@ export default function About() {
         <p className="text-[15px] text-stone-600">
           {friends} A monthly winner.
           <br />
-          Something made by Vitumbiko.
+          Something handmade by {WORKSHOP_NAME}.
         </p>
       </div>
 
       <Section
         no="01"
         title="The league"
-        sub="Level on points at the top? Higher season total takes it. Still level, and both win."
+        sub="Level on points? The higher single-gameweek score that month wins. Still level, and it’s drawn by lot. To play for a month’s prize you need to have joined before it began."
       >
-        Most points across the month’s gameweeks wins a handmade pine gift. A gameweek belongs to
-        the month its deadline falls in, and points count after transfer costs, as FPL reports them.
+        The eligible manager with the most points across the month’s gameweeks wins a handmade
+        wooden gift. A gameweek belongs to the month its deadline falls in, and the points are the
+        ones in FPL’s own monthly table.
       </Section>
 
       <Section
         no="02"
         title="The draw"
-        sub="One manager. One use. Reloading, retrying or a friend’s phone cannot change the pick. Your revealed gift stays in your cabinet."
+        sub="One manager, one team, one code. Collect within 60 days, and show you control your FPL team before handover."
       >
-        Your gift is chosen at random, from the pieces still available, at the moment Vitumbiko
-        issues your code. The shuffle you see afterwards is for show.
+        Your gift is drawn at random, from the pieces still available, when the month’s draw is run.
+        The draw is recorded for the results video; the shuffle you see when you enter your code is
+        for show.
       </Section>
 
       <Section
         no="03"
         title="The workshop"
-        sub="Follow your gift from the first cut to your shelf."
+        sub="Handmade means each piece varies a little in colour, grain and finish."
       >
-        {WORKSHOP_NAME} is Vitumbiko’s one-man workshop. Solid pine, visible grain, useful little
-        things, photographed as they are cut, glued and finished.
+        {WORKSHOP_NAME} makes every prize by hand: visible grain, useful little things, photographed
+        as they are cut, glued and finished.
       </Section>
 
-      <Link to="/gifts" className="btn btn-text mt-4">
-        Look around →
-      </Link>
+      <div className="mt-4 flex flex-col items-start">
+        <Link to="/rules" className="btn btn-text">
+          Read the prize rules →
+        </Link>
+        <Link to="/gifts" className="btn btn-text">
+          Look around →
+        </Link>
+      </div>
+
+      <p className="mt-6 border-t border-pine-200 pt-4 text-xs leading-relaxed text-stone-600">
+        Free to join. Run independently by {WORKSHOP_NAME}; not affiliated with or endorsed by the
+        Premier League or Fantasy Premier League.
+      </p>
     </div>
   )
 }

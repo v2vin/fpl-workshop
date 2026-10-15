@@ -1,3 +1,5 @@
+import { LEAGUE_TIME_ZONE } from './config'
+
 /** "2026-09" → "September 2026". */
 export function formatMonth(yyyyMm: string): string {
   const [y, m] = yyyyMm.split('-').map(Number)
@@ -45,5 +47,17 @@ export function formatDeadline(iso: string): string {
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
+  })
+}
+
+/** "14 December 2026" in Malawi, for prize hold dates. */
+export function formatDate(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: LEAGUE_TIME_ZONE,
   })
 }

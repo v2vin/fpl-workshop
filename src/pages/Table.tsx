@@ -6,7 +6,10 @@ import Notice from '../components/Notice'
 import Page from '../components/Page'
 import StandingsTable from '../components/StandingsTable'
 import { useAuth } from '../lib/auth'
+import { WORKSHOP_NAME } from '../lib/config'
 import { formatRelative } from '../lib/format'
+import { entriesOpen } from '../lib/rules'
+import { useEntries } from '../lib/useEntries'
 import { useMonth, useNow, useStandingsState } from '../lib/useFpl'
 import { useManager } from '../lib/useManager'
 
@@ -21,6 +24,7 @@ const TITLE = (
 export default function Table() {
   const { standings, error } = useStandingsState()
   const month = useMonth(standings?.currentMonth ?? null)
+  const entries = useEntries()
   const now = useNow()
   const { user } = useAuth()
   const manager = useManager(user?.uid)
@@ -63,9 +67,18 @@ export default function Table() {
     >
       {error && <Notice error>Couldn’t refresh the points. Showing the last update.</Notice>}
       <DeadlineCard standings={standings} now={now} />
+      {entriesOpen(now) && (
+        <p className="-mt-2 text-xs text-stone-600">
+          New entries close Thursday 22 October and play for prizes from November.{' '}
+          <Link to="/rules" className="underline underline-offset-2">
+            Rules
+          </Link>
+        </p>
+      )}
       <MonthlyRace
         monthId={standings.currentMonth}
         month={month}
+        entries={entries}
         myEntry={myEntry}
         teamOf={teamOf}
       />
@@ -79,9 +92,9 @@ export default function Table() {
       <div className="mt-6 grid grid-cols-[64px_1fr] items-center gap-4 border-t-2 border-pine-300 pt-5">
         <img src="/brand/mark.svg" alt="" className="h-16 w-16" />
         <div>
-          <p className="eyebrow text-[10px]">VMS Woodwork</p>
+          <p className="eyebrow text-[10px]">The prizes</p>
           <h3 className="display mt-1 text-base">On the bench</h3>
-          <p className="text-xs text-stone-600">Solid pine. Made by Vitumbiko.</p>
+          <p className="text-xs text-stone-600">Made by {WORKSHOP_NAME}.</p>
           <Link to="/gifts" className="btn btn-text text-sm">
             See the gifts →
           </Link>

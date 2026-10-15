@@ -1,14 +1,98 @@
+import { useState } from 'react'
 import { Link } from 'react-router'
 import Badge from '../components/Badge'
 import GiftCard from '../components/GiftCard'
 import Icon from '../components/Icon'
+import Notice from '../components/Notice'
 import Page from '../components/Page'
 import SignInButton from '../components/SignInButton'
 import StatusBadge from '../components/StatusBadge'
+import TeamPicker from '../components/TeamPicker'
 import { useAuth } from '../lib/auth'
+import { releaseTeam } from '../lib/claims'
+import { WORKSHOP_NAME } from '../lib/config'
 import { formatMonth } from '../lib/format'
+import { setHideName, type Manager } from '../lib/managers'
+import { useClaims } from '../lib/useClaims'
+import { useEntries } from '../lib/useEntries'
 import { useGifts } from '../lib/useGifts'
 import { useManager } from '../lib/useManager'
+
+/** "Your account": the linked team and its confirmation (rules 1.4, 4.2), and naming (5.3). */
+function Account({ uid, manager }: { uid: string; manager: Manager }) {
+  const claims = useClaims(true)
+  const entries = useEntries()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const id = manager.fplEntryId
+  const claim = id !== null ? claims?.get(id) : undefined
+  const mine = claim?.uid === uid ? claim : undefined
+  const entry = id !== null ? entries?.get(id) : undefined
+
+  async function run(action: () => Promise<void>) {
+    setBusy(true)
+    setError(null)
+    try {
+      await action()
+    } catch (err) {
+      console.error(err)
+      setError('That did not save. Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <div>
+        <dt className="text-xs text-stone-600">Your team</dt>
+        <dd>
+          {id === null ? (
+            'Not picked yet. Choose it at the top of the page.'
+          ) : entry ? (
+            <>
+              <b>{entry.playerName}</b> · {entry.teamName}
+            </>
+          ) : (
+            <span className="font-mono">Team {id}</span>
+          )}{' '}
+          {id !== null &&
+            (mine?.verified ? (
+              <Badge tone="live">Confirmed</Badge>
+            ) : (
+              <Badge>Waiting for {WORKSHOP_NAME} to confirm</Badge>
+            ))}
+        </dd>
+        {id !== null && !mine?.verified && claims && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void run(() => releaseTeam(uid, id, mine !== undefined))}
+            className="btn btn-text text-sm"
+          >
+            Not your team? Pick again
+          </button>
+        )}
+      </div>
+      <label className="flex items-start gap-2.5">
+        <input
+          type="checkbox"
+          className="mt-1"
+          checked={manager.hideName}
+          disabled={busy}
+          onChange={(e) => void run(() => setHideName(uid, e.target.checked))}
+        />
+        <span>
+          Leave my name out of the results video, social posts and the wall of winners
+          <small className="block text-xs text-stone-600">
+            Set it before the month’s draw (rule 5.3).
+          </small>
+        </span>
+      </label>
+      {error && <Notice error>{error}</Notice>}
+    </>
+  )
+}
 
 export default function Cabinet() {
   const { user, loading, signOut } = useAuth()
@@ -65,6 +149,7 @@ export default function Cabinet() {
 
   return (
     <Page title="Your shelf." intro="The points fade. The pine stays.">
+      {manager?.fplEntryId === null && <TeamPicker uid={user.uid} allowLater={false} />}
       {mine.length === 0 ? (
         <div className="card px-4 py-10 text-center">
           <Icon name="cabinet" className="mx-auto mb-5 h-10 w-10 text-pine-600" />
@@ -89,16 +174,13 @@ export default function Cabinet() {
       <section>
         <h2 className="display mt-6 mb-3 text-[23px]">Your account</h2>
         <div className="card p-4 text-sm">
-          <dl className="grid grid-cols-2 gap-3.5">
+          <dl className="space-y-3.5">
             <div>
-              <dt className="text-xs text-stone-600">Name</dt>
+              <dt className="text-xs text-stone-600">Signed in as</dt>
               <dd>{manager?.displayName ?? user.displayName ?? 'Manager'}</dd>
             </div>
+            {manager && <Account uid={user.uid} manager={manager} />}
             <div>
-              <dt className="text-xs text-stone-600">FPL team id</dt>
-              <dd className="font-mono">{manager?.fplEntryId ?? <Badge>not linked yet</Badge>}</dd>
-            </div>
-            <div className="col-span-2">
               <dt className="text-xs text-stone-600">User id</dt>
               <dd className="font-mono text-xs break-all select-all">{user.uid}</dd>
             </div>

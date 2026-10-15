@@ -1,7 +1,9 @@
 rules_version = '2';
 
-// Implements CLAUDE.md, "Firestore security rules (intent)". Anything not matched is denied.
-// The GitHub Action writes standings/months/gameweeks with the admin SDK, which bypasses rules.
+// Implements CLAUDE.md, "Firestore security rules (intent)", and the parts of the prize rules
+// (src/data/rules.ts) that the database must hold. Anything not matched is denied.
+// The GitHub Action writes standings/months/gameweeks/entries with the admin SDK, which bypasses
+// rules.
 service cloud.firestore {
   match /databases/{database}/documents {
     // Vitumbiko's Firebase Auth uid. Must match OWNER_UID in
@@ -9,22 +11,79 @@ service cloud.firestore {
     function ownerUid() { return 'ixlVRwiaMsRS2DTweHSzXOMcgh52'; }
     function signedIn() { return request.auth != null; }
     function isOwner() { return signedIn() && request.auth.uid == ownerUid(); }
+    function claimPath(entryId) {
+      return /databases/$(database)/documents/claims/$(string(entryId));
+    }
+    function managerPath(uid) { return /databases/$(database)/documents/managers/$(uid); }
 
-    // managers/{uid}: read by any signed-in user; write only by that uid;
-    // fplEntryId may be set once and not changed afterwards.
+    // managers/{uid}: read by any signed-in user; written by that uid. fplEntryId links the
+    // account to one FPL team and moves only together with claims/{entryId} in the same batch:
+    // null -> id while creating the claim, id -> null while deleting it. The owner may reset it
+    // to null when releasing a claim.
     match /managers/{uid} {
       function managerKeys() {
-        return request.resource.data.keys().hasOnly(['displayName', 'fplEntryId', 'photoURL', 'joinedAt']);
+        return request.resource.data.keys()
+          .hasOnly(['displayName', 'fplEntryId', 'photoURL', 'joinedAt', 'hideName']);
       }
-      function entryIdUnchangedOrFirstSet() {
-        return !('fplEntryId' in resource.data)
-          || resource.data.fplEntryId == null
-          || request.resource.data.fplEntryId == resource.data.fplEntryId;
+      function oldEntry() { return resource.data.get('fplEntryId', null); }
+      function newEntry() { return request.resource.data.get('fplEntryId', null); }
+      function entryUnchanged() { return newEntry() == oldEntry(); }
+      function linking() {
+        return oldEntry() == null && newEntry() is int
+          && getAfter(claimPath(newEntry())).data.uid == uid;
+      }
+      function unlinking() {
+        return oldEntry() != null && newEntry() == null && !existsAfter(claimPath(oldEntry()));
       }
       allow read: if signedIn();
-      allow create: if signedIn() && request.auth.uid == uid && managerKeys();
-      allow update: if signedIn() && request.auth.uid == uid && managerKeys() && entryIdUnchangedOrFirstSet();
+      allow create: if signedIn() && request.auth.uid == uid && managerKeys()
+        && request.resource.data.get('fplEntryId', null) == null;
+      allow update: if signedIn() && request.auth.uid == uid && managerKeys()
+        && (entryUnchanged() || linking() || unlinking());
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fplEntryId'])
+        && newEntry() == null;
       allow delete: if false;
+    }
+
+    // claims/{entryId}: which account plays which FPL team. The document id makes a team
+    // claimable once (rule 1.4); managers/{uid}.fplEntryId makes an account claim one team.
+    // Read by signed-in users so the picker can show taken teams. The owner confirms a claim once
+    // the manager has shown they control the team (rule 4.2), and can release one.
+    match /claims/{entryId} {
+      function claimKeys() { return request.resource.data.keys().hasOnly(['uid', 'claimedAt', 'verified']); }
+      allow read: if signedIn();
+      allow create: if signedIn() && claimKeys()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.verified == false
+        && request.resource.data.claimedAt is string
+        && getAfter(managerPath(request.auth.uid)).data.fplEntryId == int(entryId);
+      // Owner adopts a link made before claims existed, after checking it.
+      allow create: if isOwner() && claimKeys()
+        && request.resource.data.uid is string
+        && request.resource.data.verified is bool
+        && get(managerPath(request.resource.data.uid)).data.fplEntryId == int(entryId);
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verified'])
+        && request.resource.data.verified is bool;
+      // A manager can take back a wrong pick until the owner has confirmed it.
+      allow delete: if isOwner()
+        || (signedIn() && resource.data.uid == request.auth.uid
+          && resource.data.verified == false
+          && getAfter(managerPath(request.auth.uid)).data.fplEntryId == null);
+    }
+
+    // entries/{entryId}: one per FPL team, created by the sync. Read by anyone; the owner edits
+    // only the eligibility fields (rules 1.1, 1.4, 5.1, 5.2).
+    match /entries/{entryId} {
+      allow read: if true;
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['joinedOn', 'seasonForfeit', 'forfeitMonths'])
+        && (request.resource.data.joinedOn == null || request.resource.data.joinedOn is string)
+        && request.resource.data.seasonForfeit is bool
+        && request.resource.data.forfeitMonths is list;
+      allow create, delete: if false;
     }
 
     // gifts/*: read by anyone (including signed out); write only by the owner.
@@ -34,22 +93,30 @@ service cloud.firestore {
     }
 
     // codes/{code}: get only by the winner (and the owner, who issued it); list denied to everyone
-    // except the owner; create only by the owner; update only by the winner and only to flip
-    // redeemed false -> true together with redeemedAt; delete only by the owner.
+    // except the owner; create only by the owner; update by the winner only to flip
+    // redeemed false -> true together with redeemedAt, and by the owner only to return an
+    // unclaimed prize to the pool (rule 4.3); delete only by the owner.
     match /codes/{code} {
       function isWinner() { return signedIn() && request.auth.uid == resource.data.winnerUid; }
+      function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
       function redeemOnly() {
-        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['redeemed', 'redeemedAt'])
+        return changed().hasOnly(['redeemed', 'redeemedAt'])
           && resource.data.redeemed == false
           && request.resource.data.redeemed == true
           && request.resource.data.redeemedAt is string;
       }
+      function returnOnly() {
+        return changed().hasOnly(['returnedAt'])
+          && resource.data.get('returnedAt', null) == null
+          && request.resource.data.returnedAt is string;
+      }
       allow get: if isOwner() || isWinner();
       allow list: if isOwner();
       allow create: if isOwner()
-        && request.resource.data.keys().hasOnly(['month', 'winnerUid', 'giftId', 'issuedAt', 'redeemed', 'redeemedAt'])
+        && request.resource.data.keys().hasOnly(['month', 'winnerUid', 'entryId', 'giftId',
+          'issuedAt', 'redeemed', 'redeemedAt', 'pool', 'decidedBy', 'tied', 'returnedAt'])
         && request.resource.data.redeemed == false;
-      allow update: if isWinner() && redeemOnly();
+      allow update: if (isWinner() && redeemOnly()) || (isOwner() && returnOnly());
       allow delete: if isOwner();
     }
 
