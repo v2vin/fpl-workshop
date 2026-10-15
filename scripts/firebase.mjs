@@ -27,15 +27,21 @@ if (
 }
 
 // A missing --import directory is an error for the CLI on a fresh clone, so drop the flag until
-// the first export has created it.
-const args = process.argv.slice(2).filter((a) => {
-  const m = /^--import=(.+)$/.exec(a)
-  if (m && !existsSync(m[1])) {
-    console.error(`firebase.mjs: ${m[1]} does not exist yet, starting with empty emulators`)
-    return false
-  }
-  return true
-})
+// the first export has created it. A bare --export-on-exit takes its directory from --import, so
+// hand it the directory directly or the CLI refuses to start.
+let missingImport = null
+const args = process.argv
+  .slice(2)
+  .filter((a) => {
+    const m = /^--import=(.+)$/.exec(a)
+    if (m && !existsSync(m[1])) {
+      console.error(`firebase.mjs: ${m[1]} does not exist yet, starting with empty emulators`)
+      missingImport = m[1]
+      return false
+    }
+    return true
+  })
+  .map((a) => (a === '--export-on-exit' && missingImport ? `--export-on-exit=${missingImport}` : a))
 
 // On Windows, "java" on PATH is often Oracle's javapath shim, which starts the real JVM as a
 // grandchild. The CLI's shutdown then kills only the shim and the emulator JVM lingers, holding
