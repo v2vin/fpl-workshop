@@ -16,13 +16,13 @@ export default defineConfig({
         name: 'FPL Workshop',
         short_name: 'FPL Workshop',
         description:
-          'A private Fantasy Premier League mini league with a monthly draw for handmade pine gifts.',
+          'A private Fantasy Premier League mini league with a monthly draw for handmade wooden gifts.',
         lang: 'en-GB',
         start_url: '/',
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: '#1b4d31',
+        theme_color: '#143a25',
         background_color: '#fbf7ee',
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
