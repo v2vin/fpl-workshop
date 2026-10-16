@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { WORKSHOP_NAME } from '../lib/config'
+import { RULES, RULES_DATE } from '../data/rules'
+import { formatDate } from '../lib/format'
 import { useStandings } from '../lib/useFpl'
 
 function Section({
@@ -8,11 +10,14 @@ function Section({
   title,
   children,
   sub,
+  action,
 }: {
   no: string
   title: string
   children: ReactNode
   sub?: ReactNode
+  /** A link or button under the text. */
+  action?: ReactNode
 }) {
   return (
     <section className="grid grid-cols-[27px_1fr] gap-2.5 border-b border-pine-200 py-6">
@@ -21,6 +26,7 @@ function Section({
         <h2 className="display text-[23px] tracking-[-0.5px]">{title}</h2>
         <p className="mt-2 text-[15px] leading-relaxed">{children}</p>
         {sub && <p className="mt-2 text-sm text-stone-600">{sub}</p>}
+        {action && <div className="mt-4">{action}</div>}
       </div>
     </section>
   )
@@ -66,6 +72,20 @@ export default function About() {
 
       <Section
         no="03"
+        title="The rules"
+        sub={`Published ${formatDate(`${RULES_DATE}T12:00:00Z`)}. Any change is posted in the league group first.`}
+        action={
+          <Link to="/rules" className="btn btn-primary">
+            Read the prize rules →
+          </Link>
+        }
+      >
+        {RULES.reduce((n, s) => n + s.items.length, 0)} short rules on who can win, how the winner
+        and the gift are decided, collecting your prize, and fair play.
+      </Section>
+
+      <Section
+        no="04"
         title="The workshop"
         sub="Handmade means each piece varies a little in colour, grain and finish."
       >
@@ -73,14 +93,9 @@ export default function About() {
         as they are cut, glued and finished.
       </Section>
 
-      <div className="mt-4 flex flex-col items-start">
-        <Link to="/rules" className="btn btn-text">
-          Read the prize rules →
-        </Link>
-        <Link to="/gifts" className="btn btn-text">
-          Look around →
-        </Link>
-      </div>
+      <Link to="/gifts" className="btn btn-text mt-4">
+        Look around →
+      </Link>
 
       <p className="mt-6 border-t border-pine-200 pt-4 text-xs leading-relaxed text-stone-600">
         Free to join. Run independently by {WORKSHOP_NAME}; not affiliated with or endorsed by the
