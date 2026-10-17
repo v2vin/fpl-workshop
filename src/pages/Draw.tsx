@@ -150,8 +150,9 @@ export default function Draw() {
         <GiftCard gift={gift} framed />
         <Notice>
           <b>Yours to collect until {formatDate(holdUntil(code.issuedAt))}.</b> Before handover,
-          show {WORKSHOP_NAME} you control your FPL team: a screenshot from your logged-in account
-          or a quick video call. You arrange and pay for collection or delivery, within Malawi.
+          show {WORKSHOP_NAME} you control your FPL team: add the app’s code to your team name, or
+          send a screenshot from your logged-in FPL account. You arrange and pay for collection or
+          delivery, within Malawi.
         </Notice>
         <ShareButton text={shareText(gift, code.month)} className="w-full" />
         <Link to="/cabinet" className="btn btn-text w-full">

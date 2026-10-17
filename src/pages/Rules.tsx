@@ -1,13 +1,18 @@
 import { Link } from 'react-router'
 import { WORKSHOP_NAME } from '../lib/config'
-import { RULES, RULES_DATE } from '../data/rules'
+import { RULES, RULES_DATE, RULES_UPDATED } from '../data/rules'
 import { formatDate } from '../lib/format'
 
 export default function Rules() {
   return (
     <div>
       <div className="border-b-[3px] border-pitch-800 pb-4">
-        <p className="eyebrow">Prize rules · {formatDate(`${RULES_DATE}T12:00:00Z`)}</p>
+        <p className="eyebrow">
+          Prize rules ·{' '}
+          {RULES_UPDATED !== RULES_DATE
+            ? `updated ${formatDate(`${RULES_UPDATED}T12:00:00Z`)}`
+            : formatDate(`${RULES_DATE}T12:00:00Z`)}
+        </p>
         <h1 className="display my-4 text-[34px] leading-[1.04] tracking-[-1.6px] text-pitch-900">
           The small print,
           <br />

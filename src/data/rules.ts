@@ -2,7 +2,13 @@
 // The app enforces what it can (src/lib/rules.ts); the rest is shown on /rules. Rule numbers are
 // quoted in code comments as "rule 1.3" and so on, so keep the numbering when the text changes.
 
-export const RULES_DATE = '2026-10-15'
+export const RULES_DATE: string = '2026-10-15'
+
+/**
+ * Last change to the wording; the same as RULES_DATE until the rules are amended (rule 6.2).
+ * 2026-10-16: rule 4.2 drops video calls; proof is the app's team-name code or a screenshot.
+ */
+export const RULES_UPDATED: string = '2026-10-16'
 
 export interface RuleSection {
   title: string
@@ -43,7 +49,7 @@ export const RULES: RuleSection[] = [
     title: 'Collection and delivery',
     items: [
       'Collection or delivery is arranged and paid for by the winner.',
-      'Before handover, the winner must show they control the winning FPL team (for example a screenshot from the logged-in account or a short video call).',
+      'Before handover, the winner must show they control the winning FPL team, either by adding the code from the FPL Workshop app to their FPL team name or with a screenshot from their logged-in FPL account.',
       'FPL Workshop holds a prize for 60 days from the announcement. An unclaimed prize goes back into the pool for a future draw.',
       'Prizes are delivered within Malawi only, unless agreed in writing with FPL Workshop beforehand.',
     ],
