@@ -19,6 +19,10 @@ export default function GiftCard({
 }) {
   const hero = gift.photos[0] ?? `/gifts/${gift.id}/hero.svg`
   const strip = gift.photos.slice(1)
+  // Matt clear unless noted: the food boards are oiled instead.
+  const finish = gift.boughtParts?.includes('food-safe oil')
+    ? 'food-safe oil finish'
+    : 'matt clear finish'
   return (
     <article className={framed ? 'card overflow-hidden' : ''}>
       <div
@@ -76,7 +80,7 @@ export default function GiftCard({
           <p className="mt-1.5 leading-relaxed">
             Solid pine · {gift.materials}
             <br />
-            About {gift.hours} h · matt clear finish
+            About {gift.hours} h · {finish}
             <br />
             Bought-in parts: {gift.boughtParts ?? 'none'}
           </p>

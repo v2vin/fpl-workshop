@@ -5,15 +5,22 @@
 // materials, boughtParts) of existing ones. Never touches status, wonBy, wonByName, wonMonth or photos,
 // so it is safe to re-run after the season has started.
 //
+// --prune also deletes gifts that are no longer in src/data/gifts.ts. It refuses, writing nothing,
+// if any of them has been drawn or won, so a winner's prize can never disappear.
+//
 //   node scripts/seed-gifts.mjs --emulator      # against the local emulator (npm run dev running)
 //   node scripts/seed-gifts.mjs                 # against production; needs the service-account JSON
 //                                               # in GOOGLE_APPLICATION_CREDENTIALS (never commit it)
+//   node scripts/seed-gifts.mjs --prune         # either of the above, removing retired gifts
+//
+// .github/workflows/seed-gifts.yml runs it with --prune against production on demand.
 import { applicationDefault, initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { gifts } from '../src/data/gifts.ts'
 
 const projectId = 'fpl-workshop'
 const emulator = process.argv.includes('--emulator')
+const prune = process.argv.includes('--prune')
 if (emulator) {
   process.env.FIRESTORE_EMULATOR_HOST ??= 'localhost:8080'
 } else if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
@@ -36,6 +43,27 @@ let refreshed = 0
 const batch = db.batch()
 const existing = await db.collection('gifts').get()
 const have = new Set(existing.docs.map((d) => d.id))
+
+const keep = new Set(gifts.map((g) => g.id))
+const retired = existing.docs.filter((d) => !keep.has(d.id))
+if (retired.length > 0 && !prune) {
+  console.log(
+    `Not in the list any more (run with --prune to remove): ${retired.map((d) => d.id).join(', ')}`,
+  )
+}
+if (prune) {
+  const taken = retired.filter(
+    (d) => d.get('status') !== 'available' || d.get('wonBy') != null || d.get('wonMonth') != null,
+  )
+  if (taken.length > 0) {
+    console.error(
+      `Refusing to prune: ${taken.map((d) => `${d.id} (${d.get('status')})`).join(', ')} ` +
+        'has been drawn or won. Put it back in src/data/gifts.ts or settle it first. Nothing written.',
+    )
+    process.exit(1)
+  }
+  for (const d of retired) batch.delete(d.ref)
+}
 for (const g of gifts) {
   const ref = db.collection('gifts').doc(g.id)
   const staticFields = {
@@ -53,6 +81,7 @@ for (const g of gifts) {
       ...staticFields,
       status: 'available',
       wonBy: null,
+      wonByName: null,
       wonMonth: null,
       photos: g.photos,
     })
@@ -60,4 +89,7 @@ for (const g of gifts) {
   }
 }
 await batch.commit()
-console.log(`Done: ${created} created, ${refreshed} refreshed.`)
+console.log(
+  `Done: ${created} created, ${refreshed} refreshed${prune ? `, ${retired.length} removed` : ''}.`,
+)
+for (const d of prune ? retired : []) console.log(`  removed ${d.id}`)
